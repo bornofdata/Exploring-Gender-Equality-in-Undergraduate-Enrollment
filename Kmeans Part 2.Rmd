@@ -1,0 +1,562 @@
+---
+title: "Kmeans (Distance)"
+author: "Kehinde Fagbamigbe"
+date: "2022-11-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+```{r}
+nrow(x)
+```
+
+
+```{r}
+colnames(x)
+```
+
+
+```{r}
+
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist)
+  
+}
+
+```
+
+
+```{r}
+a = sample(1:nrow(x), size = 2)
+class(a)
+```
+
+```{r}
+a[2]
+```
+
+
+```{r}
+
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 1)) #create an empty dataframe
+#colnames(df) <- c('V1', 'V2', 'V3', 'V4') #I can dynamically rename the variables based on the data or just get the column names from the data itself.
+colnames(df) <- c(colnames(x))
+cluster1 = df
+cluster2 = df #for testing purpose
+
+
+
+cluster_test_centres = list(cluster1, cluster2)
+cluster_test_centres
+```
+
+```{r}
+
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 1)) 
+colnames(df) <- c(colnames(x))
+clusters = rep(list(df), 3)
+clusters
+```
+
+
+```{r}
+a = rep(list(cluster1), 2)
+a
+
+```
+```{r}
+a[[1]]
+```
+
+
+```{r}
+set.seed(1) #Using seed to validate my answer and approach. it is not needed.
+
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist)
+  
+}
+
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) 
+colnames(df) <- c(colnames(x))
+clusters = rep(list(df), k)
+
+
+test = function(x, k){
+  random_center_index = sample(1:nrow(x), size = k)
+  cluster_dataframe <- rep(NA, k)
+  cluster_diff = array(NA, c(1,k))
+  df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) 
+  colnames(df) <- c(colnames(x))
+  clusters = rep(list(df), k)
+  
+  for (j in 1:nrow(x)) {
+    for (h in 1:k) {
+      cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] )
+      
+    }
+    
+    index_of_max_centre = which.max(cluster_diff)
+    
+    
+    
+    clusters[[index_of_max_centre]] = rbind(clusters[[index_of_max_centre]], x[j,] )
+    #cluster_test_centres[[index_of_max_centre]] = rbind(cluster_test_centres[[index_of_max_centre]], x[j,] )
+    
+  }
+  
+
+  return (clusters)
+  #return(list( intial = initial_centre, centre = cluster_dataframe, cluster_formed = cluster_test_centres ) )
+}
+```
+
+
+
+```{r}
+test(x, 5)
+```
+
+```{r}
+nrow(x)
+```
+
+
+
+```{r}
+ output1 <- paste("R","Programming")
+ output2 <- paste("R","Programming","is","fun")
+ output1
+ output2
+```
+
+```{r}
+paste('center',2, sep = '')
+```
+
+```{r}
+# "center" + 2
+```
+
+
+```{r}
+rmse.train <- rep(NA, 3)
+rmse.train
+```
+
+```{r}
+class(rmse.train)
+```
+
+```{r}
+rmse.train[1]
+```
+
+```{r}
+num_poly <- 10
+rmse.train <- rep(NA, num_poly)
+rmse.validation <- rep(NA, num_poly)
+
+polydata <- training.data$mpg
+xeval <- validation.data$mpg
+
+for (q in 1:num_poly){
+  polydata <- data.frame(polydata, 
+                         (training.data$hp)^q)
+  colnames(polydata)[1] <- "mpg"
+  for (i in 2:(q+1)){
+    colnames(polydata)[i] <- paste("hp", i-1, sep="") 
+  }
+  modl.formula <- paste("mpg ~", paste(colnames(polydata)[2:ncol(polydata)], collapse="+"))
+  ## Fit polynomial model on training data
+```
+
+
+
+
+
+
+
+```{r}
+set.seed(1) #Using seed to validate my answer and approach. it is not needed.
+
+
+initial = function(x, k){
+  initial_centre = c() #create an empty vector
+  random_center_index = sample(1:nrow(x), size = k)
+  cluster_dataframe <- rep(NA, k)
+  
+  for (i in 1:k) {
+    initial_centre[i] = random_center_index[i]
+    
+    cluster_dataframe[i] <- paste("cluster", i, sep="") 
+    
+  }
+  
+  
+  dummmy_dataframe <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) #create an empty dataframe
+  colnames(dummmy_dataframe) <- c(colnames(x))
+
+  
+  return(list( intial = initial_centre, centre = cluster_dataframe) )
+}
+```
+
+
+```{r}
+initial(x, 2)
+```
+
+
+```{r}
+initial
+```
+```{r}
+initial(x, 2)
+```
+
+
+
+
+
+```{r}
+cluster_centres = list()
+
+for (k in 1:11){
+  
+    #storing the values
+    cluster_centres[k] <- (k)
+    
+}
+```
+
+```{r}
+cluster_centres
+```
+
+
+
+```{r}
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 1)) #create an empty dataframe
+#colnames(df) <- c('V1', 'V2', 'V3', 'V4') #I can dynamically rename the variables based on the data or just get the column names from the data itself.
+colnames(df) <- c(colnames(x))
+cluster1 = df
+cluster2 = df #for testing purpose
+
+
+
+```
+
+```{r}
+cluster1
+```
+
+
+```{r}
+class(cluster1)
+```
+
+```{r}
+cluster_test_centres = c(cluster1 = cluster1, cluster2 = cluster2)
+cluster_test_centres
+```
+
+```{r}
+cluster_test_centres = data.frame(cluster1, cluster2)
+cluster_test_centres
+```
+
+```{r}
+cluster_test_centres = list(cluster1, cluster2)
+cluster_test_centres
+```
+
+```{r}
+cluster_test_centres[1]
+```
+
+
+
+```{r}
+set.seed(1) #Using seed to validate my answer and approach. it is not needed.
+
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist)
+  
+}
+
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) #create an empty dataframe
+#colnames(df) <- c('V1', 'V2', 'V3', 'V4') #I can dynamically rename the variables based on the data or just get the column names from the data itself.
+colnames(df) <- c(colnames(x))
+cluster1 = df
+cluster2 = df #for testing purpose
+
+
+
+
+test = function(x, k){
+  initial_centre = c() #create an empty vector
+  random_center_index = sample(1:nrow(x), size = k)
+  cluster_dataframe <- rep(NA, k)
+  #cluster_diff <- rep(NA, k)
+  cluster_diff = array(NA, c(1,k))
+  dummmy_dataframe <- data.frame(matrix(ncol = dim(x)[2], nrow = 1)) #create an empty dataframe
+  colnames(dummmy_dataframe) <- c(colnames(x))
+  
+  
+  # for (i in 1:k) {
+  #   initial_centre[i] = random_center_index[i]
+  #   #cluster_diff[i] <- paste("cluster_diff", i, sep="") 
+  #   cluster_dataframe[i] <- paste("cluster", i, sep="") 
+  #   #cluster_dataframe[i] <- dummmy_dataframe
+  #   cat("dataframe", cluster_dataframe[i])
+  # }
+  
+  
+  for (j in 1:nrow(x)) {
+    for (h in 1:k) {
+      #initial_centre[h] = random_center_index[h]
+      #cluster_diff[h] = (x[j,] - x[initial_centre,])^2
+      #array(1:3, c(2,4))
+      cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] )
+      
+      #cat('euclidean distance ',cluster_diff[h] )  #uncomment
+      
+      
+      #cluster_diff[h] = sqrt(apply(abs((x[j,] - x[initial_centre[h],])^2), 1, sum ))
+      
+    }
+    
+    index_of_max_centre = which.max(cluster_diff)
+    cat('index of cluster ',index_of_max_centre)  #uncomment
+    
+    
+    
+    
+    cluster_test_centres[index_of_max_centre] = rbind(cluster_test_centres[index_of_max_centre], x[j,] )
+    cat('centeres of cluster ',cluster_test_centres)
+    
+  }
+  
+
+  
+  return(list( intial = initial_centre, centre = cluster_dataframe, cluster_formed = cluster_test_centres ) )
+}
+```
+
+```{r}
+cluster_test_centres[2]
+```
+
+```{r}
+test(x, 2)
+```
+
+```{r}
+summary(test)
+```
+
+
+```{r}
+random_center_index = sample(1:nrow(x), size = 2)
+center1 = random_center_index[1]
+center2 = random_center_index[2]
+dummmy_dataframe <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) #create an empty dataframe
+colnames(dummmy_dataframe) <- c(colnames(x))
+
+
+
+
+
+```
+
+
+```{r}
+  
+  for (i in 1:nrow(x)) {
+  c1_centers = (x[i,] - x[center1,])^2
+  c2_centers = (x[i,] - x[center2,])^2
+  c1_sum = apply(abs(c1_centers), 1, sum)
+  c2_sum = apply(abs(c2_centers), 1, sum)
+  c1 = sqrt(c1_sum)
+  c2 = sqrt(c2_sum)
+  if (c1 >= c2){
+    
+    cluster1 = rbind(cluster1, x[i,] )
+    
+  }
+  
+  else{
+    
+    cluster2 = rbind(cluster2, x[i,] )
+    
+  }
+  
+  
+  
+}
+ 
+```
+
+
+
+```{r}
+
+set.seed(1) #Using seed to validate my answer and approach. it is not needed.
+random_center_index = sample(1:nrow(x), size = 2)
+center1 = random_center_index[1]
+center2 = random_center_index[2]
+cluster1 = list()
+cluster2 = list()
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) #create an empty dataframe
+colnames(df) <- c('V1', 'V2', 'V3', 'V4') #I can dynamically rename the variables based on the data or just get the column names from the data itself.
+cluster1 = df
+cluster2 = df
+# 
+# eucl.dist <- function(X, Y){
+#   dist <- sqrt(sum((X - Y)^2))
+#   return(dist)
+# }
+
+
+
+
+for (i in 1:nrow(x)) {
+  c1_centers = (x[i,] - x[center1,])^2
+  c2_centers = (x[i,] - x[center2,])^2
+  c1_sum = apply(abs(c1_centers), 1, sum)
+  c2_sum = apply(abs(c2_centers), 1, sum)
+  c1 = sqrt(c1_sum)
+  c2 = sqrt(c2_sum)
+  if (c1 >= c2){
+    
+    cluster1 = rbind(cluster1, x[i,] )
+    
+  }
+  
+  else{
+    
+    cluster2 = rbind(cluster2, x[i,] )
+    
+  }
+  
+  
+  
+}
+
+
+```
+
+
+```{r}
+cluster1
+```
+
+
+```{r}
+cluster2
+```
+
+
+```{r}
+nrow(cluster1)
+```
+
+```{r}
+nrow(cluster2)
+```
+
+
+
+```{r}
+
+set.seed(1) #Using seed to validate my answer and approach. it is not needed.
+random_center_index = sample(1:nrow(x), size = 2)
+center1 = random_center_index[1]
+center2 = random_center_index[2]
+cluster1 = list()
+cluster2 = list()
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) #create an empty dataframe
+colnames(df) <- c('V1', 'V2', 'V3', 'V4') #I can dynamically rename the variables based on the data or just get the column names from the data itself.
+cluster1 = df
+cluster2 = df
+# 
+# eucl.dist <- function(X, Y){
+#   dist <- sqrt(sum((X - Y)^2))
+#   return(dist)
+# }
+
+
+
+
+for (i in 1:nrow(x)) {
+  # c1_centers = (x[i,] - x[center1,])^2
+  # c2_centers = (x[i,] - x[center2,])^2
+  
+  c1 = sqrt(apply(abs((x[i,] - x[center1,])^2), 1, sum ))
+  c2 = sqrt(apply(abs((x[i,] - x[center2,])^2), 1, sum ))
+  
+  # c1_sum = apply(abs(c1_centers), 1, sum)
+  # c2_sum = apply(abs(c2_centers), 1, sum)
+  # c1 = sqrt(c1_sum)
+  # c2 = sqrt(c2_sum)
+  if (c1 >= c2){
+    
+    cluster1 = rbind(cluster1, x[i,] )
+    
+  }
+  
+  else{
+    
+    cluster2 = rbind(cluster2, x[i,] )
+    
+  }
+  
+  
+  
+}
+
+
+```
+
+
+```{r}
+cluster2
+```
+```{r}
+cluster1
+```
+
+```{r}
+apply(cluster1, 2, sum )
+```
+
+```{r}
+cluster1
+```
+```{r}
+apply(cluster2, 2, sum )
+```
+
+
+
+```{r}
+cov(cluster1)
+```
+
+```{r}
+cov(cluster2)
+```
+

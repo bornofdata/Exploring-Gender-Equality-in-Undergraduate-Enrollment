@@ -1,0 +1,202 @@
+---
+title: "kmeans & EM"
+author: "Kehinde Fagbamigbe"
+date: "2023-01-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+library(tidyr)
+library(mvtnorm)
+```
+
+
+
+```{r}
+source("/Users/alhajidot/Documents/BGSU/Project/EMScript.R")
+```
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+
+
+
+```{r}
+# Function to calculate euclidean distance
+euclidean_distance <- function(X, Y) {
+  dist <- sqrt(rowSums((X - Y)^2))
+  return(dist)
+}
+
+# Function to perform k-means clustering
+kmeans <- function(x, k, max_iter = 10, tol = 1e-5) {
+  
+  # Select k random observations as initial centroids
+  centroids <- x[sample(1:nrow(x), size = k, replace = TRUE), ]
+
+  
+  # Initialize empty clusters and old centroids
+  clusters <- rep(list(data.frame(matrix(ncol = ncol(x), nrow = 0))), k)
+  old_clusters <- rep(list(data.frame(matrix(ncol = ncol(x), nrow = 0))), k)
+  old_centroids <- centroids
+  
+  
+    # Initialize empty clusters and old centroids
+  # clusters <- rep(list(data.frame(matrix(ncol = ncol(x), nrow = 0))), k)
+  # old_clusters <- clusters
+  # old_centroids <- matrix(NA, nrow = k, ncol = ncol(x))
+  
+  
+  # Repeat the following steps until convergence or maximum iterations
+  for (iter in 1:max_iter) {
+    # Assign each observation to the cluster with the nearest centroid
+    for (i in 1:nrow(x)) {
+      distances <- sapply(1:k, function(j) euclidean_distance(x[i,], centroids[j,]))
+      
+        # for (i in 1:k) {
+        #   distances[i] = euclidean_distance(x[j,], centroids[i,])
+        # }
+      
+      
+      cluster <- which.min(distances)
+      clusters[[cluster]] <- rbind(clusters[[cluster]], x[i,])
+    }
+    
+    # Check if the clusters have changed
+    if (identical(old_clusters, clusters)) {
+      break # Exit the loop if the clusters have not changed
+    }
+    
+    # Check for empty clusters
+    empty_clusters <- which(sapply(clusters, nrow) == 0)
+    if (length(empty_clusters) > 0) {
+      # Select new random centroid for empty cluster
+      random_center_index <- sample(1:nrow(x), size = length(empty_clusters), replace = TRUE)
+      centroids[empty_clusters, ] <- x[random_center_index, ]
+    }
+    
+    # Update the centroids
+    for (i in 1:k) {
+      centroids[i, ] <- colMeans(clusters[[i]])
+    }
+    
+    # Check for convergence
+    if(sum(abs(rowSums(centroids - old_centroids)))<tol){
+      break
+    }
+    
+    old_centroids <- centroids
+    old_clusters <- clusters
+
+  }
+  
+  return(list(clusters = clusters, centroids = centroids))
+}
+
+```
+
+
+
+
+
+
+```{r}
+trial = kmeans(x, 4)
+trial
+```
+
+```{r}
+trial$clusters[[1]]
+```
+
+
+```{r}
+trial$clusters[[2]]
+```
+
+```{r}
+dim(x)
+```
+
+
+
+
+
+```{r}
+# # Function to calculate euclidean distance
+# euclidean_distance <- function(X, Y) {
+#   dist <- sqrt(rowSums((X - Y)^2))
+#   return(dist)
+# }
+# 
+# # Function to perform k-means clustering
+# kmeans <- function(x, k, max_iter = 100, tol = 1e-5) {
+#   
+#   # Select k random observations as initial centroids
+#   centroids <- x[sample(1:nrow(x), size = k, replace = TRUE), ]
+#   
+#   
+#   # Initialize empty clusters and old centroids
+#   clusters <- rep(list(data.frame(matrix(ncol = ncol(x), nrow = 0))), k)
+#   old_clusters <- clusters
+#   old_centroids <- matrix(NA, nrow = k, ncol = ncol(x))
+#   
+#   
+#   # Repeat the following steps until convergence or maximum iterations
+#   for (iter in 1:max_iter) {
+#     # Assign each observation to the cluster with the nearest centroid
+#     distances <- sapply(1:k, function(i) euclidean_distance(x, centroids[i,]))
+#     cluster_index <- apply(distances, 1, which.min)
+#     
+#     # Check if the clusters have changed
+#     if (identical(old_clusters, clusters)) {
+#       break # Exit the loop if the clusters have not changed
+#     }
+#     
+#     # Update the clusters
+#     for (i in 1:k) {
+#       clusters[[i]] <- x[cluster_index == i, ]
+#     }
+#     
+#     # Check for empty clusters
+#     empty_clusters <- which(sapply(clusters, nrow) == 0)
+#     
+#     if (length(empty_clusters) > 0) {
+#   # Select new random centroid for empty cluster
+#   random_center_index <- sample(1:nrow(x), size = length(empty_clusters), replace = TRUE)
+#   centroids[empty_clusters, ] <- x[random_center_index, ]
+# }
+# 
+# # Update the centroids
+# for (i in 1:k) {
+#   centroids[i, ] <- colMeans(clusters[[i]])
+# }
+# 
+# #Check for convergence
+# if(sum(abs(colSums(centroids-old_centroids)))<tol){
+#   break
+# }
+# old_centroids <- centroids
+# old_clusters <- clusters
+# 
+# }
+# 
+# return(list(clusters = clusters, centroids = centroids))
+# }
+
+
+
+```

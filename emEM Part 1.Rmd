@@ -1,0 +1,259 @@
+---
+title: "emEM Part 1"
+author: "Kehinde Fagbamigbe"
+date: "2022-10-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+RNGkind (sample.kind = "Rounding") 
+set.seed(1)
+```
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+library(tidyr)
+
+```
+
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+
+```{r}
+p = dim(x)[2]
+p
+```
+
+
+```{r}
+RNGkind (sample.kind = "Rounding") 
+# set.seed(1) #This Kmeans version is deterministic, it doesn't change with setting of seed
+### Rescale the data
+# x.scaled <- scale(x, center = TRUE, scale = TRUE)
+# x.scaled.attr <- attributes(x.scaled)
+# x.scaled.attr
+```
+
+
+```{r}
+source("/Users/alhajidot/Documents/BGSU/Project/EMScript.R")
+```
+
+
+
+```{r}
+
+bic_values = list()
+iteration = list()
+for (k in 2:3){
+    km <- kmeans(x, k, iter.max = 1)
+    mu_test <- km$centers
+    g = t(km$centers)
+    cov_test <- (array(c(diag(p)), dim = c(p,p,k)))
+    t_test = rep(1/k, k)
+    iteration[[k]] = k
+    emEM = EM(x, tau = t_test,  Mu = g, covariance = cov_test, eps = 1e-4)
+    bic_values[[k]] = emEM$BIC
+    
+}
+```
+
+
+```{r}
+mu_test
+```
+
+
+
+```{r}
+cov_test
+```
+
+
+
+
+```{r}
+bic_values = bic_values[2:10]
+bic_values
+```
+
+
+```{r}
+iteration = iteration[2:10]
+```
+
+```{r}
+values = list(iteration, bic_values)
+values
+```
+
+```{r}
+df <- data.frame(matrix(unlist(values), nrow=length(values), byrow=TRUE))
+df
+```
+```{r}
+df[1,]
+```
+
+```{r}
+g = t(df)
+g
+```
+
+
+```{r}
+g
+```
+
+```{r}
+which.min(g[,2])
+```
+
+```{r}
+new = data.frame(x = g[,1], y =g[,2] )
+new
+```
+```{r}
+row.names(new) <- NULL
+new
+```
+
+```{r}
+which.min(g[,2])
+```
+
+
+```{r}
+plot(g[,1]  , g[,2])
+```
+
+```{r}
+install.packages("ggplot2", dependencies=TRUE)
+library(ggplot2)
+
+```
+
+
+
+
+
+
+```{r}
+
+# ggplot2(g, aes(x = g[,1] , y = g[,2], data = g )) + geom_point() 
+```
+
+
+```{r}
+
+# ggplot2(g, aes(x = g[,1] , y = g[,2], data = g )) + geom_point() + labs(y="BIC", x="k cluster", subtitle="BIC Vs No of Clusters")
+
+
+
+# ggplot(salaries, aes(x =reorder(factor(City), Salary, na.rm = TRUE), y = Salary)) + geom_boxplot() + labs(y="Salary", x="City", subtitle="Parallel Boxplots for Salaries") + coord_flip() 
+```
+
+
+
+```{r}
+RNGkind (sample.kind = "Rounding") 
+set.seed(1)
+
+cluster_centres = list()
+covariance = list()
+tau = list()
+bic_values = list()
+for (k in 2:5){
+    km <- kmeans(x.scaled, k, iter.max = 1)
+    #mu_test <- km$centers
+    cluster_centres[[k]] <- (km$centers)
+    covariance[[k]] <- (array(c(diag(p)), dim = c(p,p,k)))
+    tau[[k]] = rep(1/k, k)
+    
+    
+    g = t(km$centers)
+    cov_test <- (array(c(diag(p)), dim = c(p,p,k)))
+    t_test = rep(1/k, k)
+    emEM = EM(x, tau = t_test,  Mu = g, covariance = cov_test, eps = 1e-4)
+    bic_values[[k]] = emEM$BIC
+}
+
+bic_values
+```
+
+
+
+
+
+```{r}
+cluster_centres
+```
+
+
+```{r}
+#cluster_centres[[7]]
+```
+
+
+```{r}
+covariance
+```
+
+
+
+```{r}
+covariance[[7]]
+```
+
+```{r}
+tau[[7]]
+```
+
+
+```{r}
+#LogLL = list()
+LogLL <- NULL
+
+for (i in 2:5) {
+  
+  emEM = EM(x, tau = tau[[7]],  Mu = t(cluster_centres[[7]]), covariance = covariance[[7]], eps = 1e-4)
+  LogLL[[k]] <- c(LogLL, emEM$logL)
+  
+}
+```
+
+
+
+```{r}
+LogLL
+```
+
+
+
+```{r}
+avector <- as.vector(aframe['a2'])
+class(avector) 
+
+avector <- aframe[['a2']]
+class(avector)
+
+avector <- aframe[,2]
+class(avector)
+
+
+```
+

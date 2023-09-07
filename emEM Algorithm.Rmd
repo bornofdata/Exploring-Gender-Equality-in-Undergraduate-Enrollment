@@ -1,0 +1,483 @@
+---
+title: "emEM Algorithm"
+author: "Kehinde Fagbamigbe"
+date: "2022-10-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+RNGkind (sample.kind = "Rounding") 
+set.seed(1)
+```
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+```{r}
+dim(x)
+```
+
+
+```{r}
+p = dim(x)[2]
+p
+```
+
+
+```{r}
+RNGkind (sample.kind = "Rounding") 
+set.seed(1)
+
+### Rescale the data
+x.scaled <- scale(x, center = TRUE, scale = TRUE)
+x.scaled.attr <- attributes(x.scaled)
+x.scaled.attr
+```
+
+
+
+
+```{r}
+
+cluster_centres = list()
+
+for (k in 2:10){
+    km <- kmeans(x.scaled, k, iter.max = 1)
+    cluster_centres[[k]] <- c(cluster_centres, km$centers)
+    #tmp.wss <- c(tmp.wss, km$tot.withinss)
+    #cat("Iteration", tmp.wss, "\n")
+  }
+```
+
+
+```{r}
+covariance[[2]]
+```
+
+
+```{r}
+
+cluster_centres = list()
+covariance = list()
+tau = list()
+for (k in 2:10){
+    km <- kmeans(x.scaled, k, iter.max = 1)
+    cluster_centres[[k]] <- (km$centers) 
+    covariance[[k]] <- (array(c(diag(p)), dim = c(p,p,k)))
+    tau[[k]] = rep(1/k, k)
+    #cluster_centres[[k]] <- c(cluster_centres, km$centers)
+    #tmp.wss <- c(tmp.wss, km$tot.withinss)
+    #cat("Iteration", tmp.wss, "\n")
+    
+    
+    
+    
+    
+    
+  }
+
+
+             # Create list
+#cluster_centres 
+#covariance
+#tau
+```
+
+
+
+
+
+```{r}
+p = dim(x)[2]
+p
+```
+
+```{r}
+km <- kmeans(x.scaled, k, iter.max = 1)
+km$centers
+class(km$centers)
+dim(km$centers)
+```
+
+```{r}
+km <- kmeans(x.scaled, k, iter.max = 1)
+g = t(km$centers)
+class(g)
+dim(g)
+```
+
+```{r}
+# cluster_centres = list()
+# covariance = list()
+# tau = list()
+bic_values = list()
+for (k in 2:10){
+    km <- kmeans(x.scaled, k, iter.max = 1)
+    mu_test <- km$centers
+    g = t(km$centers)
+    cov_test <- (array(c(diag(p)), dim = c(p,p,k)))
+    t_test = rep(1/k, k)
+    emEM = EM(x, tau = t_test,  Mu = g, covariance = cov_test, eps = 1e-4)
+    bic_values[[k]] = emEM$BIC
+}
+
+bic_values
+```
+
+
+
+
+
+
+
+```{r}
+```{r}
+emEM = EM(x, tau = t_test,  Mu = mu_test, covariance = cov_test, eps = 1e-4)
+```
+
+
+```{r}
+emEM$logL
+```
+
+
+
+
+```{r}
+diag(4) * 2
+```
+
+
+```{r}
+array(c(diag(4)), dim = c(4,4,3))
+```
+
+```{r}
+array(c(diag(4)), dim = c(4,4,2))
+```
+
+
+```{r}
+test <- kmeans(x.scaled, 2, iter.max = 1)
+test$centers
+```
+
+
+```{r}
+class(test$centers)
+```
+
+
+```{r}
+cluster_centres[[2]]
+```
+
+```{r}
+mu_test = matrix(cluster_centres[[2]], nrow = 2, ncol = 4 )
+mu_test
+```
+
+
+
+```{r}
+class(cluster_centres[[2]])
+```
+
+
+```{r}
+class(mu_test)
+```
+
+
+```{r}
+#cluster_centres
+```
+
+
+
+
+
+
+
+
+
+```{r}
+#Elbow Method for finding the optimal number of clusters
+set.seed(123)
+# Compute and plot wss for k = 2 to k = 15.
+k.max <- 15
+data <- x.scaled
+wss <- sapply(1:k.max, 
+              function(k){kmeans(data, k, nstart=1, iter.max = 1 )$tot.withinss})
+wss
+```
+
+
+```{r}
+plot(1:k.max, wss,
+     type="b", pch = 19, frame = FALSE, 
+     xlab="Number of clusters K",
+     ylab="Total within-clusters sum of squares")
+```
+
+
+```{r}
+k_means = kmeans(data, 6, iter.max = 1 )
+k_means
+```
+
+```{r}
+k_means$centers
+```
+
+```{r}
+k_means$tot.withinss
+```
+
+
+```{r}
+k_means$size
+```
+```{r}
+k = length(k_means$size)
+k
+```
+
+
+# Within Cluster Sum of square (wss)
+# smaller wss implies within cluster homogeneity i.e closeness of data point to the centroid.
+
+```{r}
+km.list <- list()  #Empty list
+wss <- NULL
+centre <- NULL
+seed <- NULL
+cluster <- NULL
+for (k in 1:3){
+  tmp.wss <- NULL
+  ## Running kmeans 10 times for each k to get the best result
+  
+  
+  for (itr in 1:6){
+    set.seed(itr)
+    km <- kmeans(x.scaled, k)
+    tmp.wss <- c(tmp.wss, km$tot.withinss)
+    #cat("Iteration", tmp.wss, "\n")
+  }
+  
+  select.seed <- which.min(tmp.wss) #which.min() returns the index of the lowest number
+  #cat("Seed", select.seed, "\n")
+  seed <- c(seed, select.seed)
+  set.seed(select.seed) #since the index is the same as the seed we return that.
+  km <- kmeans(x.scaled, k)
+  cluster <- c(cluster, k)
+  wss <- c(wss, km$tot.withinss)
+  centre <- c(centre, km$centers)
+  km.list[[k]] <- c(km.list, km)
+  
+}
+
+
+#plot(seq(1,20,1), wss, type = "l", xlab = "Number of clusters")
+
+```
+
+```{r}
+diag(4)
+```
+
+
+
+```{r}
+centre
+```
+
+
+```{r}
+km
+```
+
+
+```{r}
+wss
+```
+
+
+```{r}
+min(wss)
+```
+
+```{r}
+minimum_wss_index = which(wss == min(wss))
+minimum_wss_index
+```
+
+
+```{r}
+seed
+```
+
+
+
+```{r}
+seed = seed[minimum_wss_index]
+seed
+```
+
+```{r}
+cluster
+```
+```{r}
+cluster = cluster[minimum_wss_index]
+cluster
+#cluster = 4  #remove this
+```
+
+
+```{r}
+set.seed(seed)
+km_final <- kmeans(x.scaled, cluster)
+```
+
+```{r}
+km_final$centers
+```
+
+
+
+```{r}
+t_test = rep(1/cluster, cluster)
+t_test
+```
+
+```{r}
+mu_test = t(km_final$centers)
+mu_test
+```
+
+```{r}
+class(mu_test)
+```
+
+```{r}
+dim(mu_test)
+```
+
+
+
+```{r}
+# mu_test = km_final$centers
+# mu_test
+```
+
+
+
+```{r}
+e1 = c(2,1,2,5)
+e2 = c(9,5,8,3)
+e3 = c(3,7,3,7)
+
+cov_e1 <- matrix(cov(as.matrix(e1)), nrow = 1, ncol = 4)
+cov_e1 = as.vector(cov_e1)
+cv_1 = diag(cov_e1, nrow =  4, ncol = 4)
+#cv_1
+
+
+cov_e2 <- matrix(cov(as.matrix(e2)), nrow = 1, ncol = 4)
+cov_e2 = as.vector(cov_e2)
+cv_2 = diag(cov_e2, nrow =  4, ncol = 4)
+#cv_2
+
+
+cov_e3 <- matrix(cov(as.matrix(e3)), nrow = 1, ncol = 4)
+cov_e3 = as.vector(cov_e3)
+cv_3 = diag(cov_e3, nrow =  4, ncol = 4)
+#cv_3
+
+
+cov_test = array(c(cv_1, cv_2, cv_3), dim = c(4,4,3))
+cov_test
+```
+
+```{r}
+source("/Users/alhajidot/Documents/BGSU/Project/EMScript.R")
+```
+
+
+```{r}
+#A2 <- EM(x,tau = t_test, Mu = mu_test, covariance = cov_test, eps = 1e-4)
+```
+
+
+```{r}
+emEM = EM(x, tau = t_test,  Mu = mu_test, covariance = cov_test, eps = 1e-4)
+```
+
+
+```{r}
+emEM$logL
+```
+
+```{r}
+emEM$Mu
+```
+
+```{r}
+emEM$covariance
+```
+
+
+```{r}
+emEM$id
+```
+
+```{r}
+emEM$AIC
+```
+
+
+
+```{r}
+#emEM = EM(x, tau = t_test,  Mu = mu_test, covariance = cov_test, eps = 1e-4)
+```
+
+
+
+
+```{r}
+iteration <- NULL
+LogLikelihood <- NULL
+
+
+for (i in 1:100) {
+  set.seed(i)
+  
+  emEM = EM(x, tau = t_test,  Mu = mu_test, covariance = cov_test, eps = 1e-4)
+  iteration <- c(iteration, i)
+  LogLikelihood <- c(LogLikelihood, emEM$logL)
+}
+```
+
+
+
+```{r}
+LogLikelihood
+```
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,688 @@
+---
+title: "Project KMeans Full Model"
+author: "Kehinde Fagbamigbe"
+date: "2022-11-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(tidyverse)
+library(tidyr)
+library(mvtnorm)
+```
+
+```{r}
+RNGkind (sample.kind = "Rounding") 
+```
+
+
+```{r}
+source("/Users/alhajidot/Documents/BGSU/Project/EMScript.R")
+```
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+
+
+```{r}
+
+set.seed(1) #Using seed to validate my answer and approach. it is not needed.
+
+#function to calculate euclidean distance
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist) #returns euclidean distance between two points or two vectors
+  
+}
+
+test = function(x, k){
+  random_center_index = sample(1:nrow(x), size = k) #radomnly selects a row of a specified size as intial center
+  cluster_diff = array(NA, dim = c(1,k)) #create a dummy array of 1 row and specified k column. This will hold the distances calculated amongst all the clusters
+  df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0))  #creating a dummy dataframe of no row and same no of column as the original data
+  colnames(df) <- c(colnames(x)) #renaming the column of the created dataframe with data's column name
+  clusters = rep(list(df), k) #duplicating the created dataframe in the specified cluster amount
+  
+  for (j in 1:nrow(x)) { #for each of the rows in the data
+    for (h in 1:k) { #for each of the specified cluster
+      cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] ) #calculate the euclidean distance between each observation and  the randonly selected centres
+      
+    }
+    index_of_min_centre = which.min(cluster_diff) #find the index of the smallest euclidean distance across all the clusters
+    clusters[[index_of_min_centre]] = rbind(clusters[[index_of_min_centre]], x[j,] ) #adding to the row where the cluster belongs based on euclidean distance
+    
+  }
+  
+  # cluster_centres = list()
+  # covariance = list()
+  # p <- dim(x)[2]
+  # Mu = matrix(0, nrow = p, ncol = K)
+  # covariance = array(0, dim = c(p,p,K))
+  cluster_centres = list()
+  covariance = list()
+
+  for (l in 1:k){
+    
+    #for a 4 column data with a three cluster algorithm we should have
+    # a mean of vector of 1*4 in three places
+    # a covariance matrix with dimension 4*4 in three places.
+    
+    
+    cluster_centres[[l]] <- apply(clusters[[l]], 2, mean )
+    covariance[[l]] <- (array(cov(clusters[[l]]), dim = c(dim(x)[2], dim(x)[2],l)))
+    
+    # cluster_centres[[l]] <- (km$centers)
+    # covariance[[l]] <- (array(c(diag(p)), dim = c(p,p,k)))
+    
+  }
+  
+  return (list(clusters = clusters, mean = cluster_centres, cov_matrix = covariance ))
+ # return (list(clusters = clusters, cluster_centres = cluster_centres, covariance = covariance ))
+}
+
+
+```
+
+
+```{r}
+set.seed(1)
+trial = test(x, 2)
+trial
+```
+
+## Adding EM Algorithm
+
+
+```{r}
+# Estep
+E.step <- function(x, tau, Mu, covariance){  #tau is mixture proportion, Mu is mean S2 is Covariance
+  
+  x <- as.matrix(x)
+  n <- dim(x)[1]
+  K <- length(tau)
+  p <- dim(x)[2]
+  Pi <- matrix(NA, n, K)
+  
+  for (i in 1:n){
+    
+    for (k in 1:K){
+      Pi[i,k] <- tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])  #dnorm means normal distribution
+      
+    } 
+    Pi[i,] <- Pi[i,] / sum(Pi[i,])
+  }
+  return(Pi)
+  
+}
+
+
+# Mstep
+M.step <- function(x, Pi){
+  x <- as.matrix(x)
+  K <- dim(Pi)[2]
+  n <- dim(x)[1]
+  p <- dim(x)[2]
+  Mu = matrix(0, nrow = p, ncol = K)
+  covariance = array(0, dim = c(p,p,K))
+  
+  Sum.Pi <- apply(Pi, 2, sum)
+  tau <- Sum.Pi / n
+  
+  for (k in 1:K){
+    
+    for (i in 1:n){
+      Mu[,k] <- Mu[,k] + Pi[i,k] %*% t(x[i,])
+    }
+    Mu[,k] <- Mu[,k] / Sum.Pi[k]
+    
+    
+    for (i in 1:n){   
+      covariance[, , k] <- covariance[, , k] + (Pi[i,k] *  ( as.matrix(x[i,] - Mu[,k])) %*%  t(as.matrix(x[i,] - Mu[,k])))
+    }
+    covariance[, , k] <- covariance[, , k] / Sum.Pi[k]
+    
+  }
+  
+  return(list(tau = tau, Mu = Mu, covariance = covariance))
+  
+}
+
+
+
+# Log Likelihood
+logL <- function(x, tau, Mu, covariance){
+  
+  x <- as.matrix(x)
+  n <- dim(x)[1]
+  K <- length(tau)
+  
+  ll <- 0
+  
+  for (i in 1:n){
+    
+    ll2 <- 0
+    
+    for (k in 1:K){
+      ll2 <- ll2 + tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])
+    }
+    
+    ll <- ll + log(ll2)
+  }
+  
+  return(ll)
+  
+}
+
+
+# EM Algorithm
+EM <- function(x, tau, Mu, covariance, eps){
+  
+  x <- as.matrix(x)
+  K <- length(tau)
+  n <- dim(x)[1]
+  p <- dim(x)[2]
+  b <- 0
+  ll.old <- -Inf
+  ll <- logL(x, tau, Mu, covariance)
+  repeat{
+    
+    b <- b + 1
+    
+    if ((ll - ll.old) / abs(ll) < eps) break
+    ll.old <- ll
+    Pi <- E.step(x, tau, Mu, covariance)
+    M <- M.step(x,Pi)
+    
+    tau <- M$tau
+    Mu <- M$Mu
+    covariance <- M$covariance
+    
+    ll <- logL(x, tau, Mu, covariance) 
+    #cat("Iteration", b, "logL =", ll, "\n")
+  }
+  
+  id <- apply(Pi, 1, which.max)
+  
+  M <- 3 * K - 1
+  BIC <- -2 * ll + M * log(n)
+  AIC <- -2 * ll + M * 2
+  
+  return(list(tau = tau, Mu = Mu, covariance = covariance, logL = ll, BIC = BIC, Pi = Pi , id = id, AIC = AIC))
+  
+}
+
+```
+
+
+```{r}
+    # for (p in 4:1) {
+    #   
+    #   print(p)
+    #   
+    # }  
+```
+
+
+
+
+```{r}
+set.seed(1)
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist) 
+  
+}
+
+test = function(x, k){
+  random_center_index = sample(1:nrow(x), size = k) 
+  cluster_diff = array(NA, dim = c(1,k)) 
+  df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) 
+  colnames(df) <- c(colnames(x))
+  clusters = rep(list(df), k) 
+  saving_centres = list()
+  
+  for (j in 1:nrow(x)) { 
+    for (h in 1:k) {
+      cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] ) 
+      
+    }
+    index_of_min_centre = which.min(cluster_diff) 
+    clusters[[index_of_min_centre]] = rbind(clusters[[index_of_min_centre]], x[j,] ) 
+    saving_centres <- clusters
+    
+  }
+  
+  
+  
+  #testing my saving cluster logic
+    for (j in 1:nrow(x)) { 
+      
+    #UNCOMMENT TO REVOKE   
+    
+    # for (h in 1:k) {
+    #   cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] ) 
+    #   
+    # }
+    # index_of_min_centre = which.min(cluster_diff) 
+    # clusters[[index_of_min_centre]] = rbind(clusters[[index_of_min_centre]], x[j,] ) 
+    # saving_centres <- clusters
+      
+      
+      
+      
+    while (h <= k) {
+      
+      
+      for (h in 1:k) {
+      cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] ) 
+      
+    }
+    index_of_min_centre = which.min(cluster_diff) 
+    clusters[[index_of_min_centre]] = rbind(clusters[[index_of_min_centre]], x[j,] ) 
+    saving_centres <- clusters
+    h = h + 1
+      
+    }
+      
+    
+    for (p in k:1) {
+      
+    for (h in 1:k) {
+      cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] ) 
+      
+    }
+    index_of_min_centre = which.min(cluster_diff) 
+    clusters[[index_of_min_centre]] = rbind(clusters[[index_of_min_centre]], x[j,] ) 
+    saving_centres <- clusters
+      
+    }  
+    
+
+    
+    
+    
+    
+    
+    
+    
+  }
+  
+  
+
+  # cluster_centres = list()
+  # covariance = list()
+  cluster_centres = list()
+  covariance = list()
+  tau = list()
+  bic_values = list()
+  iteration = list()
+
+  for (l in 1:k){
+    
+    cluster_centres[[l]] <- apply(clusters[[l]], 2, mean )
+    covariance[[l]] <- (    array(cov(clusters[[l]]), dim = c(dim(x)[2], dim(x)[2],l))    )
+    
+    # g = (apply(clusters[[l]], 2, mean ))
+    # cov_test <- (array(cov(clusters[[l]]), dim = c(dim(x)[2], dim(x)[2],l)))
+    # t_test = rep(1/l, l)
+    # emEM = EM(x, tau = t_test,  Mu = g, covariance = cov_test, eps = 1e-4)
+    # bic_values[[k]] = emEM$BIC
+    
+    
+    
+    # g = t(apply(clusters[[l]], 2, mean ))
+    # cov_test <- (  array(cov(clusters[[l]]), dim = c(dim(x)[2], dim(x)[2],l))   )
+    # t_test = rep(1/l, l)
+    # iteration[[l]] = l
+    # emEM = EM(x, tau = t_test,  Mu = g, covariance = cov_test, eps = 1e-4)
+    # bic_values[[l]] = emEM$BIC
+    # 
+  }
+  
+  return (list(clusters = clusters, mean = cluster_centres, cov_matrix = covariance))
+  #return (list(clusters = clusters, mean = cluster_centres, cov_matrix = covariance, bic_result = bic_values ))
+}
+
+```
+
+
+```{r}
+(array(c(diag(4)), dim = c(4,4,1)))
+```
+
+```{r}
+(array(c(diag(4)), dim = c(4,4,2)))
+```
+
+
+```{r}
+set.seed(1)
+result = test(x, 3)
+result
+```
+
+
+
+
+
+```{r}
+
+
+#function to calculate euclidean distance
+euclidean_distance <- function(X, Y){
+  dist <- sqrt(sum((X - Y) ^ 2))
+  return(dist) #returns euclidean distance between two points or two vectors
+}
+
+
+# Function to perform k-means clustering
+kmeans <- function(x, k) {
+  
+  # Select k random observations as initial centroids
+  centroids <- x[sample(1:nrow(x), size = k, replace = TRUE), ]
+  
+  # creating dummy clusters
+  clusters <- rep(list(data.frame(matrix(ncol = ncol(x), nrow = 0))), k)
+
+
+  # Initialize empty clusters and old centroids
+
+  old_clusters <- clusters
+  old_centroids <- matrix(NA, nrow = k, ncol = ncol(x))
+  
+   distances = array(NA, c(1,k))
+
+  # Repeat the following steps until convergence
+  while (TRUE) {
+    
+    # Assign each observation to the cluster with the nearest centroid
+    for (j in 1:nrow(x)) {
+      
+              # Calculate the distance between the observation and each centroid
+              # distances <- sapply(1:k, function(i) euclidean_distance(x[j,], centroids[i,]))
+              for (i in 1:k) {
+              distances[i] = euclidean_distance(x[j,], centroids[i,])
+        
+            }
+        
+        # Find the index of the nearest centroid
+        cluster <- which.min(distances) #gets the index of the cluster to which the observation belongs to based on shortest distance
+        
+        # Add the observation to the corresponding cluster
+        clusters[[cluster]] <- rbind(clusters[[cluster]], x[j,]) 
+        
+        
+      
+    }
+
+    # Check if the clusters have changed
+    if (identical(old_clusters, clusters)) { 
+      break # Exit the loop if the clusters have not changed
+    }
+    
+    
+
+    # Check for empty clusters
+    empty_clusters <- which(sapply(clusters, nrow) == 0)
+
+    if (length(empty_clusters) > 0) {
+      # Select new random centroid for empty cluster
+      random_center_index <- sample(1:nrow(x), size = length(empty_clusters), replace = TRUE)
+      centroids[empty_clusters, ] <- x[random_center_index, ]
+    }
+
+    # Check for infinite loop
+    if (identical(old_centroids, centroids)) {
+      break # Exit the loop if the centroids have not changed
+    }
+    old_centroids <- centroids
+
+    # Update the centroids
+    for (i in 1:k) {
+      centroids[i, ] <- colMeans(clusters[[i]])
+    }
+
+    old_clusters <- clusters
+  }
+
+  return(list(clusters = clusters, centroids = centroids))
+}
+
+```
+
+
+
+
+```{r}
+trial = kmeans(x, 4)
+trial
+```
+```{r}
+nrow(x)
+```
+
+
+
+
+```{r}
+
+#function to calculate euclidean distance
+euclidean_distance <- function(X, Y){
+  dist <- sqrt(sum((X - Y) ^ 2))
+  return(dist) #returns euclidean distance between two points or two vectors
+}
+
+
+# Function to perform k-means clustering
+kmeans <- function(x, k) {
+  
+  # Select k random observations as initial centroids
+  centroids <- x[sample(1:nrow(x), size = k, replace = TRUE), ]
+  
+  # creating dummy clusters
+  clusters <- rep(list(data.frame(matrix(ncol = ncol(x), nrow = 0))), k)
+
+
+  # Initialize empty clusters and old centroids
+
+  old_clusters <- clusters
+  old_centroids <- matrix(NA, nrow = k, ncol = ncol(x))
+  
+   distances = array(NA, c(1,k))
+
+  # Repeat the following steps until convergence
+  while (TRUE) {
+    
+    # Assign each observation to the cluster with the nearest centroid
+    for (j in 1:nrow(x)) {
+      
+              # Calculate the distance between the observation and each centroid
+              # distances <- sapply(1:k, function(i) euclidean_distance(x[j,], centroids[i,]))
+              for (i in 1:k) {
+              distances[i] = euclidean_distance(x[j,], centroids[i,])
+        
+            }
+        
+        # Find the index of the nearest centroid
+        cluster <- which.min(distances) #gets the index of the cluster to which the observation belongs to based on shortest distance
+        
+        # Add the observation to the corresponding cluster
+        clusters[[cluster]] <- rbind(clusters[[cluster]], x[j,]) 
+        
+        
+      
+    }
+
+    # Check if the clusters have changed
+    if (identical(old_clusters, clusters)) { 
+      break # Exit the loop if the clusters have not changed
+    }
+    
+    
+
+    # Check for empty clusters
+    empty_clusters <- which(sapply(clusters, nrow) == 0)
+
+    if (length(empty_clusters) > 0) {
+      # Select new random centroid for empty cluster
+      random_center_index <- sample(1:nrow(x), size = length(empty_clusters), replace = TRUE)
+      centroids[empty_clusters, ] <- x[random_center_index, ]
+    }
+
+    # Check for infinite loop
+    if (identical(old_centroids, centroids)) {
+      break # Exit the loop if the centroids have not changed
+    }
+    old_centroids <- centroids
+
+    # Update the centroids
+    for (i in 1:k) {
+      centroids[i, ] <- colMeans(clusters[[i]])
+    }
+
+    old_clusters <- clusters
+  }
+
+  return(list(clusters = clusters, centroids = centroids))
+   
+   
+   
+}
+
+```
+
+
+
+### Optimized code
+
+```{r}
+# Function to calculate euclidean distance
+euclidean_distance <- function(X, Y) {
+  dist <- sqrt(rowSums((X - Y)^2))
+  return(dist)
+}
+
+# Function to perform k-means clustering
+kmeans <- function(x, k, max_iter = 100, tol = 1e-5) {
+  
+  # Select k random observations as initial centroids
+  centroids <- x[sample(1:nrow(x), size = k, replace = TRUE), ]
+  
+  # Initialize empty clusters and old centroids
+  clusters <- rep(list(data.frame(matrix(ncol = ncol(x), nrow = 0))), k)
+  old_clusters <- clusters
+  old_centroids <- matrix(NA, nrow = k, ncol = ncol(x))
+  
+  # Repeat the following steps until convergence or maximum iterations
+  for (iter in 1:max_iter) {
+    # Assign each observation to the cluster with the nearest centroid
+
+    distances <- sapply(1:k, function(i) euclidean_distance(x[iter,], centroids[i,]))
+    # cluster_index <- apply(distances, 1, which.min)
+    
+     # Find the index of the nearest centroid
+    cluster <- which.min(distances) #gets the index of the cluster to which the observation belongs to based on shortest distance
+        
+     # Add the observation to the corresponding cluster
+    clusters[[cluster]] <- rbind(clusters[[cluster]], x[iter,]) 
+
+    
+    # Check if the clusters have changed
+    if (identical(old_clusters, clusters)) {
+      break # Exit the loop if the clusters have not changed
+    }
+    
+    
+    
+    
+    # Check for empty clusters
+    empty_clusters <- which(sapply(clusters, nrow) == 0)
+    
+    
+    if (length(empty_clusters) > 0) {
+  # Select new random centroid for empty cluster
+  random_center_index <- sample(1:nrow(x), size = length(empty_clusters), replace = TRUE)
+  centroids[empty_clusters, ] <- x[random_center_index, ]
+}
+
+# Update the centroids
+for (i in 1:k) {
+  centroids[i, ] <- colMeans(clusters[[i]])
+}
+
+#Check for convergence
+if(sum(abs(colSums(centroids - old_centroids)))<tol){
+  break
+}
+    
+old_centroids <- centroids
+old_clusters <- clusters
+
+}
+
+return(list(clusters = clusters, centroids = centroids))
+}
+
+
+
+    
+
+```
+
+
+```{r}
+# RNGkind (sample.kind = "Rounding") 
+# set.seed(1)
+# 
+# cluster_centres = list()
+# covariance = list()
+# tau = list()
+# bic_values = list()
+# for (k in 2:5){
+#     km <- kmeans(x.scaled, k, iter.max = 1)
+#     #mu_test <- km$centers
+#     cluster_centres[[k]] <- (km$centers)
+#     covariance[[k]] <- (array(c(diag(p)), dim = c(p,p,k)))
+#     tau[[k]] = rep(1/k, k)
+#     
+#     
+#     g = t(km$centers)
+#     cov_test <- (array(c(diag(p)), dim = c(p,p,k)))
+#     t_test = rep(1/k, k)
+#     emEM = EM(x, tau = t_test,  Mu = g, covariance = cov_test, eps = 1e-4)
+#     bic_values[[k]] = emEM$BIC
+```
+
+
+
+
+
+
+
+```{r}
+# bic_values = list()
+# iteration = list()
+# for (k in 2:10){
+#     km <- kmeans(x, k, iter.max = 1)
+#     mu_test <- km$centers
+#     g = t(km$centers)
+#     cov_test <- (array(c(diag(p)), dim = c(p,p,k)))
+#     t_test = rep(1/k, k)
+#     iteration[[k]] = k
+#     emEM = EM(x, tau = t_test,  Mu = g, covariance = cov_test, eps = 1e-4)
+#     bic_values[[k]] = emEM$BIC
+# }
+
+
+```

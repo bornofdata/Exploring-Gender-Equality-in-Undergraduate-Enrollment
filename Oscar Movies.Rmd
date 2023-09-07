@@ -1,0 +1,43 @@
+---
+title: "Oscar Movies"
+author: "Kehinde Fagbamigbe"
+date: "2023-04-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# Load necessary packages
+library(rvest)
+library(httr)
+library(xml2)
+
+# Send GET request and parse HTML
+url <- "https://www.imdb.com/"
+response <- GET(url)
+html <- content(response, "text")
+parsed_html <- read_html(html)
+
+
+# Extract movie names and descriptions
+movie_names <- parsed_html %>%
+  html_nodes(".lister-item-header a") %>%
+  html_text()
+movie_descriptions <- parsed_html %>%
+  html_nodes(".lister-item-content .text-muted") %>%
+  html_text()
+
+# Clean and process data
+movie_names <- gsub("\\n", "", movie_names) # remove newline characters
+movie_descriptions <- gsub("\\n", "", movie_descriptions) # remove newline characters
+
+# Print extracted movie names and descriptions
+cat("Movie Names:\n", movie_names, "\n")
+cat("Movie Descriptions:\n", movie_descriptions, "\n")
+
+```
+

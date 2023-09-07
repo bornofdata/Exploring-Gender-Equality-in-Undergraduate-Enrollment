@@ -1,0 +1,1590 @@
+---
+title: "Data Extraction"
+author: "Kehinde Fagbamigbe"
+date: "2023-01-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+rm(list = ls())
+library(dplyr)
+library(tidyverse)
+```
+
+
+
+```{r}
+path <- "/Users/alhajidot/Documents/BGSU/Project/UG_data/"
+
+# Find all the files in the directory that match the pattern "[0-9][0-9][0-9][0-9].csv" e.g 1994.csv , 1995.csv e.t.c
+files <- list.files(path, pattern = "[0-9][0-9][0-9][0-9].csv")
+
+# Determine the number of files that match the pattern
+num_files <- length(files)
+
+# Print the result
+print(num_files)
+```
+
+### Using files to create start and end
+
+```{r}
+files <- as.list(files)
+files
+```
+
+
+
+```{r}
+start <- files[[1]]
+start <- as.numeric(substr(start, 1, 4))
+start
+```
+
+```{r}
+end <- files[[length(files)]]
+end <- as.numeric(substr(end, 1, 4))
+end
+```
+
+
+### Race Acronyms and meanings
+
+- EFAIAN --> American Indian or Alaska Native
+- EFBKAA --> Black or African American
+- EFHISP --> Hispanic
+- EFWHIT --> White 
+- EFUNKN --> Race/ethnicity unknown
+- EFNRAL --> Nonresident alien 
+- EFASIAM + EFNHPIM     DVEFAIM / EFNHPI --> Native Hawaiian or Other Pacific Islander
+
+## Courses
+
+- 4	Architecture and Related Programs
+- 13	Education
+- 14	Engineering
+- 22.0101	Law
+- 26	Biological Sciences/Life Sciences
+- 27	Mathematics
+- 40	Physical Sciences
+- 51	Medical
+- 52	Business Management and Administrative Services
+
+
+
+### varname	varTitle
+
+- CIPCODE	CIP Code for major field of study
+- EFAIANM	American Indian or Alaska Native men
+- EFAIANW	American Indian or Alaska Native women
+- DVEFAIM	Asian /Native Hawaiian or Other Pacific Islander men
+- DVEFAIW	Asian/Native Hawaiian or Other Pacific Islander women
+- EFBKAAM	Black or African American men
+- EFBKAAW	Black or African American women
+- EFHISPM	Hispanic men
+- EFHISPW	Hispanic women
+- EFWHITM	White men
+- EFWHITW	White women
+- EFUNKNM	Race/ethnicity unknown men
+- EFUNKNW	Race/ethnicity unknown women
+EFNRALM	Nonresident alien men
+EFNRALW	Nonresident alien women
+YEAR	year
+- EFAIANT(zero)	American Indian or Alaska Native Total zero
+DVEFAPT(zero)	Asian /Native Hawaiian or Other Pacific Islander Total zero
+EFBKAAT(zero)	Black or African American Total zero
+EFHISPT(zero)	Hispanic Total zero
+EFWHITT(zero)	White Total zero
+EFUNKNT(zero)	Race/ethnicity unknown Total zero
+EFNRALT(zero)	Nonresident alien total 
+EFAIANM(all)	American Indian or Alaska Native Total  men
+DVEFAPM(all)	Asian /Native Hawaiian or Other Pacific Islander Total men
+EFBKAAM(all)	Black or African American Total men
+EFHISPM(all)	Hispanic Total  men 
+EFWHITM(all)	White Total men
+EFUNKNM(all)	Race/ethnicity unknown Total  men
+EFNRALM(all)	Nonresident alien total men
+EFAIANW(all)	American Indian or Alaska Native Total  women
+DVEFAPW(all)	Asian /Native Hawaiian or Other Pacific Islander Total women
+EFBKAAW(all)	Black or African American Total women
+EFHISPW(all)	Hispanic Total  women
+EFWHITW(all)	White Total women
+EFUNKNW(all)	Race/ethnicity unknown Total  women
+EFNRALW(all)	Nonresident alien total women
+EFAIANT	American Indian or Alaska Native Total  
+DVEFAPT	Asian /Native Hawaiian or Other Pacific Islander Total 
+EFBKAAT	Black or African American Total
+EFHISPT	Hispanic Total 
+EFWHITT	White Total 
+EFUNKNT	Race/ethnicity unknown Total 
+EFNRALT	Nonresident alien total 
+	
+	
+	
+	
+	
+### EFCIPLEV CIPCODE Majors/Section
+
+101	13.0000-Education, All students total
+102	13.0000-Education, Undergraduate total
+103	13.0000-Education, Undergraduate, Degree/certificate-seeking total
+104	13.0000-Education, Undergraduate, Degree/certificate-seeking, First-time
+105	13.0000-Education, Undergraduate, Other degree/certificate-seeking, Total
+119	13.0000-Education, Undergraduate, Other degree/certificate-seeking, Transfer-ins
+120	13.0000-Education, Undergraduate, Other degree/certificate-seeking, Continuing
+111	13.0000-Education, Undergraduate, Non-degree/certificate-seeking
+112	13.0000-Education, Graduate
+121	13.0000-Education, Full-time students total
+122	13.0000-Education, Full-time students, Undergraduate total
+123	13.0000-Education, Full-time students, Undergraduate, Degree/certificate-seeking total
+124	13.0000-Education, Full-time students, Undergraduate, Degree/certificate-seeking, First-time
+125	13.0000-Education, Full-time students, Undergraduate, Other degree/certificate-seeking, Total
+139	13.0000-Education, Full-time students, Undergraduate, Other degree/certificate-seeking, Transfer-ins
+140	13.0000-Education, Full-time students, Undergraduate, Other degree/certificate-seeking, Continuing
+131	13.0000-Education, Full-time students, Undergraduate, Non-degree/certificate-seeking
+132	13.0000-Education, Full-time students, Graduate
+141	13.0000-Education, Part-time students total
+142	13.0000-Education, Part-time students, Undergraduate total
+143	13.0000-Education, Part-time students, Undergraduate, Degree/certificate-seeking total
+144	13.0000-Education, Part-time students, Undergraduate, Degree/certificate-seeking, First-time
+145	13.0000-Education, Part-time students, Undergraduate, Other degree/certificate-seeking, Total
+159	13.0000-Education, Part-time students, Undergraduate, Other degree/certificate-seeking, Transfer-ins
+160	13.0000-Education, Part-time students, Undergraduate, Other degree/certificate-seeking, Continuing
+151	13.0000-Education, Part-time students, Undergraduate, Non-degree/certificate-seeking
+152	13.0000-Education, Part-time students, Graduate
+201	14.0000-Engineering, All students total
+202	14.0000-Engineering, Undergraduate total
+203	14.0000-Engineering, Undergraduate, Degree/certificate-seeking total
+204	14.0000-Engineering, Undergraduate, Degree/certificate-seeking, First-time
+205	14.0000-Engineering, Undergraduate, Other degree/certificate-seeking, Total
+219	14.0000-Engineering, Undergraduate, Other degree/certificate-seeking, Transfer-ins
+220	14.0000-Engineering, Undergraduate, Other degree/certificate-seeking, Continuing
+211	14.0000-Engineering, Undergraduate, Non-degree/certificate-seeking
+212	14.0000-Engineering, Graduate
+221	14.0000-Engineering, Full-time students total
+222	14.0000-Engineering, Full-time students, Undergraduate total
+223	14.0000-Engineering, Full-time students, Undergraduate, Degree/certificate-seeking total
+224	14.0000-Engineering, Full-time students, Undergraduate, Degree/certificate-seeking, First-time
+225	14.0000-Engineering, Full-time students, Undergraduate, Other degree/certificate-seeking, Total
+239	14.0000-Engineering, Full-time students, Undergraduate, Other degree/certificate-seeking, Transfer-i
+240	14.0000-Engineering, Full-time students, Undergraduate, Other degree/certificate-seeking, Continuing
+231	14.0000-Engineering, Full-time students, Undergraduate, Non-degree/certificate-seeking
+232	14.0000-Engineering, Full-time students, Graduate
+241	14.0000-Engineering, Part-time students total
+242	14.0000-Engineering, Part-time students, Undergraduate total
+243	14.0000-Engineering, Part-time students, Undergraduate, Degree/certificate-seeking total
+244	14.0000-Engineering, Part-time students, Undergraduate, Degree/certificate-seeking, First-time
+245	14.0000-Engineering, Part-time students, Undergraduate, Other degree/certificate-seeking, Total
+259	14.0000-Engineering, Part-time students, Undergraduate, Other degree/certificate-seeking, Transfer-i
+260	14.0000-Engineering, Part-time students, Undergraduate, Other degree/certificate-seeking, Continuing
+251	14.0000-Engineering, Part-time students, Undergraduate, Non-degree/certificate-seeking
+252	14.0000-Engineering, Part-time students, Graduate
+301	26.0000-Biological Sciences/Life Sciences, All students total
+302	26.0000-Biological Sciences/Life Sciences, Undergraduate total
+303	26.0000-Biological Sciences/Life Sciences, Undergraduate, Degree/certificate-seeking total
+304	26.0000-Biological Sciences/Life Sciences, Undergraduate, Degree/certificate-seeking, First-time
+305	26.0000-Biological Sciences/Life Sciences, Undergraduate, Other degree/certificate-seeking, Total
+319	26.0000-Biological Sciences/Life Sciences, Undergraduate, Other degree/certificate-seeking, Transfer
+320	26.0000-Biological Sciences/Life Sciences, Undergraduate, Other degree/certificate-seeking, Continui
+311	26.0000-Biological Sciences/Life Sciences, Undergraduate, Non-degree/certificate-seeking
+312	26.0000-Biological Sciences/Life Sciences, Graduate
+321	26.0000-Biological Sciences/Life Sciences, Full-time students total
+322	26.0000-Biological Sciences/Life Sciences, Full-time students, Undergraduate total
+323	26.0000-Biological Sciences/Life Sciences, Full-time students, Undergraduate, Degree/certificate-see
+324	26.0000-Biological Sciences/Life Sciences, Full-time students, Undergraduate, Degree/certificate-see
+325	26.0000-Biological Sciences/Life Sciences, Full-time students, Undergraduate, Other degree/certifica
+339	26.0000-Biological Sciences/Life Sciences, Full-time students, Undergraduate, Other degree/certifica
+340	26.0000-Biological Sciences/Life Sciences, Full-time students, Undergraduate, Other degree/certifica
+331	26.0000-Biological Sciences/Life Sciences, Full-time students, Undergraduate, Non-degree/certificate
+332	26.0000-Biological Sciences/Life Sciences, Full-time students, Graduate
+341	26.0000-Biological Sciences/Life Sciences, Part-time students total
+342	26.0000-Biological Sciences/Life Sciences, Part-time students, Undergraduate total
+343	26.0000-Biological Sciences/Life Sciences, Part-time students, Undergraduate, Degree/certificate-see
+344	26.0000-Biological Sciences/Life Sciences, Part-time students, Undergraduate, Degree/certificate-see
+345	26.0000-Biological Sciences/Life Sciences, Part-time students, Undergraduate, Other degree/certifica
+359	26.0000-Biological Sciences/Life Sciences, Part-time students, Undergraduate, Other degree/certifica
+360	26.0000-Biological Sciences/Life Sciences, Part-time students, Undergraduate, Other degree/certifica
+351	26.0000-Biological Sciences/Life Sciences, Part-time students, Undergraduate, Non-degree/certificate
+352	26.0000-Biological Sciences/Life Sciences, Part-time students, Graduate
+401	27.0000-Mathematics, All students total
+402	27.0000-Mathematics, Undergraduate total
+403	27.0000-Mathematics, Undergraduate, Degree/certificate-seeking total
+404	27.0000-Mathematics, Undergraduate, Degree/certificate-seeking, First-time
+405	27.0000-Mathematics, Undergraduate, Other degree/certificate-seeking, Total
+419	27.0000-Mathematics, Undergraduate, Other degree/certificate-seeking, Transfer-ins
+420	27.0000-Mathematics, Undergraduate, Other degree/certificate-seeking, Continuing
+411	27.0000-Mathematics, Undergraduate, Non-degree/certificate-seeking
+412	27.0000-Mathematics, Graduate
+421	27.0000-Mathematics, Full-time students total
+422	27.0000-Mathematics, Full-time students, Undergraduate total
+423	27.0000-Mathematics, Full-time students, Undergraduate, Degree/certificate-seeking total
+424	27.0000-Mathematics, Full-time students, Undergraduate, Degree/certificate-seeking, First-time
+425	27.0000-Mathematics, Full-time students, Undergraduate, Other degree/certificate-seeking, Total
+439	27.0000-Mathematics, Full-time students, Undergraduate, Other degree/certificate-seeking, Transfer-i
+440	27.0000-Mathematics, Full-time students, Undergraduate, Other degree/certificate-seeking, Continuing
+431	27.0000-Mathematics, Full-time students, Undergraduate, Non-degree/certificate-seeking
+432	27.0000-Mathematics, Full-time students, Graduate
+441	27.0000-Mathematics, Part-time students total
+442	27.0000-Mathematics, Part-time students, Undergraduate total
+443	27.0000-Mathematics, Part-time students, Undergraduate, Degree/certificate-seeking total
+444	27.0000-Mathematics, Part-time students, Undergraduate, Degree/certificate-seeking, First-time
+445	27.0000-Mathematics, Part-time students, Undergraduate, Other degree/certificate-seeking, Total
+459	27.0000-Mathematics, Part-time students, Undergraduate, Other degree/certificate-seeking, Transfer-i
+460	27.0000-Mathematics, Part-time students, Undergraduate, Other degree/certificate-seeking, Continuing
+451	27.0000-Mathematics, Part-time students, Undergraduate, Non-degree/certificate-seeking
+452	27.0000-Mathematics, Part-time students, Graduate
+501	40.0000-Physical Sciences, All students total
+502	40.0000-Physical Sciences, Undergraduate total
+503	40.0000-Physical Sciences, Undergraduate, Degree/certificate-seeking total
+504	40.0000-Physical Sciences, Undergraduate, Degree/certificate-seeking, First-time
+505	40.0000-Physical Sciences, Undergraduate, Other degree/certificate-seeking, Total
+519	40.0000-Physical Sciences, Undergraduate, Other degree/certificate-seeking, Transfer-ins
+520	40.0000-Physical Sciences, Undergraduate, Other degree/certificate-seeking, Continuing
+511	40.0000-Physical Sciences, Undergraduate, Non-degree/certificate-seeking
+512	40.0000-Physical Sciences, Graduate
+521	40.0000-Physical Sciences, Full-time students total
+522	40.0000-Physical Sciences, Full-time students, Undergraduate total
+523	40.0000-Physical Sciences, Full-time students, Undergraduate, Degree/certificate-seeking total
+524	40.0000-Physical Sciences, Full-time students, Undergraduate, Degree/certificate-seeking, First-time
+525	40.0000-Physical Sciences, Full-time students, Undergraduate, Other degree/certificate-seeking, Tota
+539	40.0000-Physical Sciences, Full-time students, Undergraduate, Other degree/certificate-seeking, Tran
+540	40.0000-Physical Sciences, Full-time students, Undergraduate, Other degree/certificate-seeking, Cont
+531	40.0000-Physical Sciences, Full-time students, Undergraduate, Non-degree/certificate-seeking
+532	40.0000-Physical Sciences, Full-time students, Graduate
+541	40.0000-Physical Sciences, Part-time students total
+542	40.0000-Physical Sciences, Part-time students, Undergraduate total
+543	40.0000-Physical Sciences, Part-time students, Undergraduate, Degree/certificate-seeking total
+544	40.0000-Physical Sciences, Part-time students, Undergraduate, Degree/certificate-seeking, First-time
+545	40.0000-Physical Sciences, Part-time students, Undergraduate, Other degree/certificate-seeking, Tota
+559	40.0000-Physical Sciences, Part-time students, Undergraduate, Other degree/certificate-seeking, Tran
+560	40.0000-Physical Sciences, Part-time students, Undergraduate, Other degree/certificate-seeking, Cont
+551	40.0000-Physical Sciences, Part-time students, Undergraduate, Non-degree/certificate-seeking
+552	40.0000-Physical Sciences, Part-time students, Graduate
+601	52.0000-Business Management and Administrative Services, All students total
+602	52.0000-Business Management and Administrative Services, Undergraduate total
+603	52.0000-Business Management and Administrative Services, Undergraduate, Degree/certificate-seeking t
+604	52.0000-Business Management and Administrative Services, Undergraduate, Degree/certificate-seeking,
+605	52.0000-Business Management and Administrative Services, Undergraduate, Other degree/certificate-see
+619	52.0000-Business Management and Administrative Services, Undergraduate, Other degree/certificate-see
+620	52.0000-Business Management and Administrative Services, Undergraduate, Other degree/certificate-see
+611	52.0000-Business Management and Administrative Services, Undergraduate, Non-degree/certificate-seeki
+612	52.0000-Business Management and Administrative Services, Graduate
+621	52.0000-Business Management and Administrative Services, Full-time students total
+622	52.0000-Business Management and Administrative Services, Full-time undergraduate total
+623	52.0000-Business Management and Administrative Services, Full-time undergraduate, Degree/certificate
+624	52.0000-Business Management and Administrative Services, Full-time undergraduate, Degree/certificate
+625	52.0000-Business Management and Administrative Services, Full-time undergraduate, Other degree/certi
+639	52.0000-Business Management and Administrative Services, Full-time undergraduate, Other degree/certi
+640	52.0000-Business Management and Administrative Services, Full-time undergraduate, Other degree/certi
+631	52.0000-Business Management and Administrative Services, Full-time undergraduate, Non-degree/certifi
+632	52.0000-Business Management and Administrative Services, Full-time students, Graduate
+641	52.0000-Business Management and Administrative Services, Part-time students total
+642	52.0000-Business Management and Administrative Services, Part-time, undergraduate total
+643	52.0000-Business Management and Administrative Services, Part-time undergraduate, Degree/certificate
+644	52.0000-Business Management and Administrative Services, Part-time undergraduate, Degree/certificate
+645	52.0000-Business Management and Administrative Services, Part-time undergraduate, Other degree/certi
+659	52.0000-Business Management and Administrative Services, Part-time undergraduate, Other degree/certi
+660	52.0000-Business Management and Administrative Services, Part-time undergraduate, Other degree/certi
+651	52.0000-Business Management and Administrative Services, Part-time undergraduate, Non-degree/certifi
+652	52.0000-Business Management and Administrative Services, Part-time students, Graduate
+716	22.0101-Law (first professional), All students
+736	22.0101-Law (first professional), Full time
+756	22.0101-Law (first professional), Part time
+816	51.0401-Dentistry (first professional), All students
+836	51.0401-Dentistry (first professional), Full time
+856	51.0401-Dentistry (first professional), Part time
+916	51.1201-Medicine (first professional), All students
+936	51.1201-Medicine (first professional), Full time
+956	51.1201-Medicine (first professional), Part time
+
+
+### CIPCODE Majors/Section
+
+13.0000	Education
+14.0000	Engineering
+26.0000	Biological Sciences/Life Sciences
+27.0000	Mathematics
+40.0000	Physical Sciences
+51.0401	Dentistry
+51.1201	Medicine
+52.0000	Business Management and Administrative Services
+22.0101	Law
+
+
+
+### Line
+
+1	Full-time, first-time, first-year, degree-seeking undergraduates
+2	Full-time degree-seeking undergraduates, transfer-ins
+3	Full-time degree-seeking undergraduates, continuing
+6	Total full-time degree-seeking undergraduates
+7	Full-time nondegree-seeking undergraduates
+8	Total  full-time undergraduates
+9	Full-time first-professional
+11	Full-time graduates
+14	Total full-time students
+15	Part-time, first-time, first-year, degree-seeking undergraduates
+16	Part-time degree-seeking undergraduates, transfer-ins
+17	Part-time degree-seeking undergraduates, continuing
+20	Total part-time degree-seeking undergraduates
+21	Part-time nondegree-seeking undergraduates
+22	Total part-time undergraduates
+23	Part-time first-professional
+25	Part-time graduates
+28	Total part-time
+29	Total enrollment
+99	Generated record origial line number not on survey form
+
+### Section
+
+1	Full-time
+2	Part-time
+3	All students
+
+
+
+### Level Of Study
+
+1	All students total
+2	All students, Undergraduate total
+3	All students, Undergraduate, Degree/certificate-seeking total
+4	All students, Undergraduate, Degree/certificate-seeking, First-time
+5	All students, Undergraduate, Degree/certificate-seeking, Other degree/certificate-seeking
+19	All students, Undergraduate, Other degree/certificatee-seeking, Transfer-ins
+20	All students, Undergraduate, Other degree/certificatee-seeking, Continuing
+11	All students, Undergraduate, Non-degree/certificate-seeking
+12	All students, Graduate
+16	All students, First professional
+21	Full-time students total
+22	Full-time students, Undergraduate total
+23	Full-time students, Undergraduate, Degree/certificate-seeking total
+24	Full-time students, Undergraduate, Degree/certificate-seeking, First-time
+25	Full-time students, Undergraduate, Degree/certificate-seeking, Other degree/certificate-seeking
+39	Full-time students, Undergraduate, Other degree/certificatee-seeking, Transfer-ins
+40	Full-time students, Undergraduate, Other degree/certificatee-seeking, Continuing
+31	Full-time students, Undergraduate, Non-degree/certificate-seeking
+32	Full-time students, Graduate
+36	Full-time students, First professional
+41	Part-time students total
+42	Part-time students, Undergraduate total
+43	Part-time students, Undergraduate, Degree/certificate-seeking total
+44	Part-time students, Undergraduate, Degree/certificate-seeking, First-time
+45	Part-time students, Undergraduate, Degree/certificate-seeking, Other degree/certificate-seeking
+59	Part-time students, Undergraduate, Other degree/certificatee-seeking, Transfer-ins
+60	Part-time students, Undergraduate, Other degree/certificatee-seeking, Continuing
+51	Part-time students, Undergraduate, Non-degree/certificate-seeking
+52	Part-time students, Graduate
+56	Part-time students, First professional
+
+#### Read Data 
+```{r}
+major <- c(13, 14, 26, 27, 40, 52) # 13: Education, 14: Engineering, 26: BioSc, 27: Math, 40: PhySc, 52: Business
+race.male <-  c("EFAIANM", "DVEFAIM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFUNKNM", "EFNRALM")
+race.female <-  c("EFAIANW", "DVEFAIW", "EFBKAAW", "EFHISPW", "EFWHITW", "EFUNKNW", "EFNRALW")
+p <- length(major)
+q <- length(race.male)
+T <-  num_files   #14 change this count as datasets increases
+```
+
+### Notations and representations
+
+- Y[i,2,j,k,t]
+- #i, no of records/institution
+- #j/p Majors
+- #k/q: Race
+- #t/T Year
+
+
+### Getting the unique number of universities across all the years
+```{r}
+all.school.id <- list() #creates an empty list
+
+for (t in 1:T){
+  yr <- 1994 + 2*(t-1)
+  
+  df1 <- read.csv(paste("/Users/alhajidot/Documents/BGSU/Project/UG_data/", yr, ".csv", sep=""), header=TRUE)
+  all.school.id[[t]] <- unique(df1$UNITID) #gets all the unique code of faculty in each document i.e each year
+}
+
+common.school.id <- intersect(all.school.id[[1]], all.school.id[[2]]) ##compares the id in the first and second year data i.e 1994 and 1996
+
+for (t in 3:T){
+  common.school.id <- intersect(common.school.id, all.school.id[[t]]) #only get the id in all the year documents
+}
+
+school.id <- unique(common.school.id)  #gets a unique id found in all the data for all years
+n <- length(school.id) #crosscheck the number of unique ids
+n
+```
+
+### Thoughts
+
+array(NA, dim = c(970,6,7,13))
+
+So the array can be visualized as a 4-dimensional matrix with 970 elements in the first dimension, 6 elements in the second dimension, 7 elements in the third dimension, and 13 elements in the fourth dimension.
+998 rows and 6 columns
+
+- Y[i,2,j,k,t]
+- #i, no of records/institution
+- #j/p Majors
+- #k/q: Race
+- #t/T Year
+
+
+### creating the male and female arrays
+```{r}
+Male <- array(NA, dim = c(n,p,q,T))
+Female <- array(NA, dim = c(n,p,q,T))
+Y <- array(NA, dim = c(n,p,q,T))
+
+state_info <- read.csv(paste("~/Documents/BGSU/Project/hd2019.csv"), header=TRUE)
+state_info <- state_info[,c(1,6)] 
+
+#read in just the 1st and the 6th columns of this dataset UNITID where data is found for merged schools, STABBR - State Abbreviation
+
+
+school.id1 <- cbind(school.id, 1) #just created a column of school Id and a column filled with 1s so it can be good for joining
+colnames(school.id1) <- c("UNITID", "none") ##none was created as a dummy column of value to achieve joining
+```
+
+
+
+```{r}
+state_info[1:4,]
+```
+### 2018
+
+UNITID	CIPCODE	EFAIANM	EFAIANW	EFBKAAM	EFBKAAW	EFHISPM	EFHISPW DVEFAIM	DVEFAIW	EFWHITM	EFWHITW	EFUNKNM	EFUNKNW	EFNRALM	EFNRALW 
+
+
+### 2020
+UNITID	CIPCODE	EFAIANM	EFAIANW	EFBKAAM	EFBKAAW	EFHISPM	EFHISPW	DVEFAIM	DVEFAIW	EFWHITM	EFWHITW	EFUNKNM	EFUNKNW	EFNRALM	EFNRALW
+
+
+```{r}
+school.id1[1:4]
+```
+
+
+### Joining the data
+```{r}
+state_info_common <- merge(school.id1, state_info, by.x = "UNITID", by.y = "UNITID", all.x = TRUE, all.y = FALSE) # creating a left join on UNITID
+state_info_common[1:4,]
+```
+
+
+```{r}
+state_info_common <- state_info_common[,-2] #removes second column
+state_info_common[1:4,]
+```
+
+
+```{r}
+save(state_info_common, file = "/Users/alhajidot/Documents/BGSU/Project/stat_info.Rdata") #this saves the R workspace, including all variables and their values, to a file in binary format. and load("workspace.RData") will be used to load the data
+```
+
+
+### Just 1994 dataset
+```{r}
+test <- read.csv(paste("/Users/alhajidot/Documents/BGSU/Project/UG_data/", 1994, ".csv", sep=""), header=TRUE)
+head(test)
+```
+
+
+
+### cleaning up 1994 to 2000 data & removal of section
+```{r}
+# for (t in 1:4){ #1994 - 2000 only contains the section column which is the third column
+#   yr <- 1994 + 2*(t-1)
+#   df1 <- read.csv(paste("/Users/alhajidot/Documents/BGSU/Project/UG_data/", yr, ".csv", sep=""), header=TRUE) #This appends from 1994 up to 2000
+#   df1 <- df1[,-3] #removes the third column called section
+#   df2 <- df1 %>% 
+#     group_by(UNITID,	CIPCODE) %>% 
+#     dplyr::summarise(across(everything(), sum)) # is this supposed to be sum...this totally depends on the definition of the columns.
+# }
+```
+
+
+- Y[i,2,j,k,t]
+- #i, no of records/institution
+- #j/p Majors
+- #k/q: Race
+- #t/T Year
+
+```{r}
+n <- length(school.id)
+n
+```
+
+race.male <-  c("EFAIANM", "DVEFAIM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFUNKNM", "EFNRALM")
+race.female <-  c("EFAIANW", "DVEFAIW", "EFBKAAW", "EFHISPW", "EFWHITW", "EFUNKNW", "EFNRALW")
+
+
+#### Importing 2020 data
+```{r}
+data_2020 <- read.csv("/Users/alhajidot/Documents/BGSU/Project/2020/EF2020CP (2)/ef2020cp.csv", sep=",", header=TRUE)
+head(data_2020)
+```
+
+
+### Data Validation
+
+- EFAIAN --> American Indian or Alaska Native
+- EFBKAA --> Black or African American
+- EFHISP --> Hispanic
+- EFWHIT --> White 
+- EFUNKN --> Race/ethnicity unknown
+- EFNRAL --> Nonresident alien 
+- DVEFAI / EFNHPI --> Native Hawaiian or Other Pacific Islander
+
+#### Validation before transformation
+#### For Males
+```{r}
+#Sum
+EFAIANM_sum <- sum(data_2020$EFAIANM) ; EFBKAAM_sum <- sum(data_2020$EFBKAAM); EFHISPM_sum <- sum(data_2020$EFHISPM); EFWHITM_sum <- sum(data_2020$EFWHITM); EFUNKNM_sum <- sum(data_2020$EFUNKNM); EFNRALM_sum <- sum(data_2020$EFNRALM);  DVEFAIM_sum <- sum(data_2020$EFNHPIM)
+
+
+#Avg
+EFAIANM_avg <- mean(data_2020$EFAIANM) ; EFBKAAM_avg <- mean(data_2020$EFBKAAM); EFHISPM_avg <- mean(data_2020$EFHISPM); EFWHITM_avg <- mean(data_2020$EFWHITM); EFUNKNM_avg <- mean(data_2020$EFUNKNM); EFNRALM_avg <- mean(data_2020$EFNRALM);  DVEFAIM_avg <- mean(data_2020$EFNHPIM)
+
+
+#Max
+EFAIANM_max <- max(data_2020$EFAIANM) ; EFBKAAM_max<- max(data_2020$EFBKAAM); EFHISPM_max <- max(data_2020$EFHISPM); EFWHITM_max <- max(data_2020$EFWHITM); EFUNKNM_max <- max(data_2020$EFUNKNM); EFNRALM_max <- max(data_2020$EFNRALM);  DVEFAIM_max <- max(data_2020$EFNHPIM)
+
+
+
+#Min
+EFAIANM_min <- min(data_2020$EFAIANM) ; EFBKAAM_min <- min(data_2020$EFBKAAM); EFHISPM_min <- min(data_2020$EFHISPM); EFWHITM_min <- min(data_2020$EFWHITM); EFUNKNM_min <- min(data_2020$EFUNKNM); EFNRALM_min <- min(data_2020$EFNRALM);  DVEFAIM_min <- min(data_2020$EFNHPIM)
+
+#dframe <- data.frame(c(EFAIANM_sum, EFBKAAM_sum, EFHISPM_sum, EFWHITM_sum, EFUNKNM_sum, EFNRALM_sum, DVEFAIM_sum ))
+dframe <- data.frame(c(EFAIANM_sum, EFAIANM_avg, EFAIANM_min, EFAIANM_max), c( EFBKAAM_sum, EFBKAAM_avg, EFBKAAM_min, EFBKAAM_max), c(EFHISPM_sum, EFHISPM_avg, EFHISPM_min, EFHISPM_max),  c(EFWHITM_sum, EFWHITM_avg, EFWHITM_min, EFWHITM_max), c(EFUNKNM_sum, EFUNKNM_avg, EFUNKNM_min, EFUNKNM_max), c(EFNRALM_sum, EFNRALM_avg, EFNRALM_min, EFNRALM_max),  c(DVEFAIM_sum, DVEFAIM_avg, DVEFAIM_min, DVEFAIM_max))
+colnames(dframe) <- c("EFAIANM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFUNKNM", "EFNRALM", "DVEFAIM" )
+row.names(dframe) <- c("sum", "mean", "min", "max")
+dframe
+```
+
+
+#### For Females
+```{r}
+#Sum
+EFAIANW_sum <- sum(data_2020$EFAIANW) ; EFBKAAW_sum <- sum(data_2020$EFBKAAW); EFHISPW_sum <- sum(data_2020$EFHISPW); EFWHITW_sum <- sum(data_2020$EFWHITW); EFUNKNW_sum <- sum(data_2020$EFUNKNW); EFNRALW_sum <- sum(data_2020$EFNRALW);  DVEFAIW_sum <- sum(data_2020$EFNHPIW)
+
+
+#Avg
+EFAIANW_avg <- mean(data_2020$EFAIANW) ; EFBKAAW_avg <- mean(data_2020$EFBKAAW); EFHISPW_avg <- mean(data_2020$EFHISPW); EFWHITW_avg <- mean(data_2020$EFWHITW); EFUNKNW_avg <- mean(data_2020$EFUNKNW); EFNRALW_avg <- mean(data_2020$EFNRALW);  DVEFAIW_avg <- mean(data_2020$EFNHPIW)
+
+
+#Max
+EFAIANW_max <- max(data_2020$EFAIANW) ; EFBKAAW_max<- max(data_2020$EFBKAAW); EFHISPW_max <- max(data_2020$EFHISPW); EFWHITW_max <- max(data_2020$EFWHITW); EFUNKNW_max <- max(data_2020$EFUNKNW); EFNRALW_max <- max(data_2020$EFNRALW);  DVEFAIW_max <- max(data_2020$EFNHPIW)
+
+
+
+#Min
+EFAIANW_min <- min(data_2020$EFAIANW) ; EFBKAAW_min <- min(data_2020$EFBKAAW); EFHISPW_min <- min(data_2020$EFHISPW); EFWHITW_min <- min(data_2020$EFWHITW); EFUNKNW_min <- min(data_2020$EFUNKNW); EFNRALW_min <- min(data_2020$EFNRALW);  DVEFAIW_min <- min(data_2020$EFNHPIW)
+
+
+#dframe <- data.frame(c(EFAIANM_sum, EFBKAAM_sum, EFHISPM_sum, EFWHITM_sum, EFUNKNM_sum, EFNRALM_sum, DVEFAIM_sum ))
+dframe <- data.frame(c(EFAIANW_sum, EFAIANW_avg, EFAIANW_min, EFAIANW_max), c( EFBKAAW_sum, EFBKAAW_avg, EFBKAAW_min, EFBKAAW_max), c(EFHISPW_sum, EFHISPW_avg, EFHISPW_min, EFHISPW_max),  c(EFWHITW_sum, EFWHITW_avg, EFWHITW_min, EFWHITW_max), c(EFUNKNW_sum, EFUNKNW_avg, EFUNKNW_min, EFUNKNW_max), c(EFNRALW_sum, EFNRALW_avg, EFNRALW_min, EFNRALW_max),  c(DVEFAIW_sum, DVEFAIW_avg, DVEFAIW_min, DVEFAIW_max))
+colnames(dframe) <- c("EFAIANW", "EFBKAAW", "EFHISPW", "EFWHITW", "EFUNKNW", "EFNRALW", "DVEFAIW" )
+row.names(dframe) <- c("sum", "mean", "min", "max")
+dframe
+```
+
+
+```{r}
+colnames_20 <- colnames(data_2020)
+colnames_20
+```
+
+
+```{r}
+colnames(data_2020)
+```
+
+
+### Filtering to only Total Full time Undegraduate and Total part-time undergraduate
+```{r}
+data_2020 <- filter(data_2020, LINE %in% c(8,22))
+head(data_2020)
+```
+
+## Update EFASIAW + EFNHPIW  as DVEFAIM
+#### DVEFAIW is coded as EFASIAW + EFNHPIW  and DVEFAIM as EFASIAM + EFNHPIM in 2020 data respectively
+### Crosschecking the addition of Asian and Native Hawaiian or Other Pacific Islander men and women
+```{r}
+EFNHPIW_and_EFASIAW <- data_2020[,c(1,3, 4, 5, 22, 24,40, 42)]
+head(EFNHPIW_and_EFASIAW)
+```
+### Combininig Asian and Native Hawaiian or Other Pacific Islander men and women
+```{r}
+data_2020 <- mutate(data_2020, DVEFAIM = EFASIAM + EFNHPIM, DVEFAIW = EFASIAW + EFNHPIW )
+head(data_2020)
+```
+
+
+```{r}
+# data_2020 <- rename(data_2020,DVEFAIW =  EFNHPIW, DVEFAIM = EFNHPIM )
+# head(data_2020)
+```
+
+### Confirming we have just Full time (1) and Part time (2) students
+```{r}
+unique(data_2020$SECTION)
+```
+
+
+```{r}
+unique(data_2020$CIPCODE)
+```
+
+
+```{r}
+colnames(data_2020)
+```
+
+
+
+```{r}
+search_list <- c("UNITID", "CIPCODE", "SECTION", "DVEFAIW","DVEFAIM", "EFAIANW", "EFBKAAW", "EFHISPW", "EFWHITW", "EFUNKNW", "EFNRALW", "EFAIANM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFUNKNM", "EFNRALM") #"DVEFAIW"  and DVEFAIM have been coded in another way EFNHPIM + EFASIAM and EFNHPIW  + EFASIAW respectively in the data
+search_list
+```
+
+
+### 	GROUP BY SCHOOL AND  major field of study (CIP Code)
+```{r}
+#data_2020 <- select(data_2020, search_list)
+data_2020 <- data_2020[, colnames(data_2020) %in% search_list]
+
+
+df1 <- data_2020[,-3] #removes the third column called section
+df2 <- df1 %>%
+  group_by(UNITID,	CIPCODE) %>%
+  dplyr::summarise(across(everything(), sum)) 
+dir <- "/Users/alhajidot/Documents/BGSU/Project/UG_data"
+write.csv(df2, file = paste0(dir, "/2020.csv"), row.names = FALSE)
+```
+
+### After Transformation
+#### Data Validation
+
+### For Male
+```{r}
+#Sum
+EFAIANM_sum <- sum(df2$EFAIANM) ; EFBKAAM_sum <- sum(df2$EFBKAAM); EFHISPM_sum <- sum(df2$EFHISPM); EFWHITM_sum <- sum(df2$EFWHITM); EFUNKNM_sum <- sum(df2$EFUNKNM); EFNRALM_sum <- sum(df2$EFNRALM);  DVEFAIM_sum <- sum(df2$DVEFAIM)
+
+
+#Avg
+EFAIANM_avg <- mean(df2$EFAIANM) ; EFBKAAM_avg <- mean(df2$EFBKAAM); EFHISPM_avg <- mean(df2$EFHISPM); EFWHITM_avg <- mean(df2$EFWHITM); EFUNKNM_avg <- mean(df2$EFUNKNM); EFNRALM_avg <- mean(df2$EFNRALM);  DVEFAIM_avg <- mean(df2$DVEFAIM)
+
+#Max
+EFAIANM_max <- max(df2$EFAIANM) ; EFBKAAM_max<- max(df2$EFBKAAM); EFHISPM_max <- max(df2$EFHISPM); EFWHITM_max <- max(df2$EFWHITM); EFUNKNM_max <- max(df2$EFUNKNM); EFNRALM_max <- max(df2$EFNRALM);  DVEFAIM_max <- max(df2$DVEFAIM)
+
+#Min
+EFAIANM_min <- min(df2$EFAIANM) ; EFBKAAM_min <- min(df2$EFBKAAM); EFHISPM_min <- min(df2$EFHISPM); EFWHITM_min <- min(df2$EFWHITM); EFUNKNM_min <- min(df2$EFUNKNM); EFNRALM_min <- min(df2$EFNRALM);  DVEFAIM_min <- min(df2$DVEFAIM)
+
+#dframe <- data.frame(c(EFAIANM_sum, EFBKAAM_sum, EFHISPM_sum, EFWHITM_sum, EFUNKNM_sum, EFNRALM_sum, DVEFAIM_sum ))
+dframe <- data.frame(c(EFAIANM_sum, EFAIANM_avg, EFAIANM_min, EFAIANM_max), c( EFBKAAM_sum, EFBKAAM_avg, EFBKAAM_min, EFBKAAM_max), c(EFHISPM_sum, EFHISPM_avg, EFHISPM_min, EFHISPM_max),  c(EFWHITM_sum, EFWHITM_avg, EFWHITM_min, EFWHITM_max), c(EFUNKNM_sum, EFUNKNM_avg, EFUNKNM_min, EFUNKNM_max), c(EFNRALM_sum, EFNRALM_avg, EFNRALM_min, EFNRALM_max),  c(DVEFAIM_sum, DVEFAIM_avg, DVEFAIM_min, DVEFAIM_max))
+colnames(dframe) <- c("EFAIANM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFUNKNM", "EFNRALM", "DVEFAIM" )
+row.names(dframe) <- c("sum", "mean", "min", "max")
+dframe
+```
+
+#### For Females
+```{r}
+#Sum
+EFAIANW_sum <- sum(df2$EFAIANW) ; EFBKAAW_sum <- sum(df2$EFBKAAW); EFHISPW_sum <- sum(df2$EFHISPW); EFWHITW_sum <- sum(df2$EFWHITW); EFUNKNW_sum <- sum(df2$EFUNKNW); EFNRALW_sum <- sum(df2$EFNRALW);  DVEFAIW_sum <- sum(df2$DVEFAIW)
+
+
+#Avg
+EFAIANW_avg <- mean(df2$EFAIANW) ; EFBKAAW_avg <- mean(df2$EFBKAAW); EFHISPW_avg <- mean(df2$EFHISPW); EFWHITW_avg <- mean(df2$EFWHITW); EFUNKNW_avg <- mean(df2$EFUNKNW); EFNRALW_avg <- mean(df2$EFNRALW);  DVEFAIW_avg <- mean(df2$DVEFAIW)
+
+
+#Max
+EFAIANW_max <- max(df2$EFAIANW) ; EFBKAAW_max<- max(df2$EFBKAAW); EFHISPW_max <- max(df2$EFHISPW); EFWHITW_max <- max(df2$EFWHITW); EFUNKNW_max <- max(df2$EFUNKNW); EFNRALW_max <- max(df2$EFNRALW);  DVEFAIW_max <- max(df2$DVEFAIW)
+
+
+
+#Min
+EFAIANW_min <- min(df2$EFAIANW) ; EFBKAAW_min <- min(df2$EFBKAAW); EFHISPW_min <- min(df2$EFHISPW); EFWHITW_min <- min(df2$EFWHITW); EFUNKNW_min <- min(df2$EFUNKNW); EFNRALW_min <- min(df2$EFNRALW);  DVEFAIW_min <- min(df2$DVEFAIW)
+
+#dframe <- data.frame(c(EFAIANM_sum, EFBKAAM_sum, EFHISPM_sum, EFWHITM_sum, EFUNKNM_sum, EFNRALM_sum, DVEFAIM_sum ))
+dframe <- data.frame(c(EFAIANW_sum, EFAIANW_avg, EFAIANW_min, EFAIANW_max), c( EFBKAAW_sum, EFBKAAW_avg, EFBKAAW_min, EFBKAAW_max), c(EFHISPW_sum, EFHISPW_avg, EFHISPW_min, EFHISPW_max),  c(EFWHITW_sum, EFWHITW_avg, EFWHITW_min, EFWHITW_max), c(EFUNKNW_sum, EFUNKNW_avg, EFUNKNW_min, EFUNKNW_max), c(EFNRALW_sum, EFNRALW_avg, EFNRALW_min, EFNRALW_max),  c(DVEFAIW_sum, DVEFAIW_avg, DVEFAIW_min, DVEFAIW_max))
+colnames(dframe) <- c("EFAIANW", "EFBKAAW", "EFHISPW", "EFWHITW", "EFUNKNW", "EFNRALW", "DVEFAIW" )
+row.names(dframe) <- c("sum", "mean", "min", "max")
+dframe
+```
+
+
+
+```{r}
+df_2024 <- read.csv("/Users/alhajidot/Documents/BGSU/Project/UG_data/2004.csv")
+colnames(df_2024)
+```
+
+#### Check for the intsersection
+```{r}
+intersect <- intersect(colnames(df2), colnames(df_2024))
+intersect
+```
+
+```{r}
+length(intersect)
+```
+
+
+### Using files to create start and end
+
+```{r}
+files <- as.list(files)
+#files
+```
+
+```{r}
+class(files)
+```
+
+
+```{r}
+start <- files[[1]]
+start <- as.numeric(substr(start, 1, 4))
+start
+```
+
+```{r}
+end <- files[[length(files)]]
+end <- as.numeric(substr(end, 1, 4))
+end
+```
+
+```{r}
+
+for (t in 1:4){ #1994 - 2000 only contains th section column which is the third column
+  yr <- 1994 + 2*(t-1)
+  df1 <- read.csv(paste("/Users/alhajidot/Documents/BGSU/Project/UG_data/", yr, ".csv", sep=""), header=TRUE)
+  df1 <- df1[,-3] #removes the third column called section
+  df2 <- df1 %>% 
+    group_by(UNITID,	CIPCODE) %>% 
+    dplyr::summarise(across(everything(), sum)) # is this supposed to be sum or count...this totally depends on the definition of the columns.
+
+
+for (i in 1:n){
+    schl_data.m <- as.data.frame(df2[which(df2$UNITID == school.id[i]),c("UNITID", "CIPCODE", race.male)]) #which gets the index and it is used to get the specified column names, this is done for both male and female
+    schl_data.f <- as.data.frame(df2[which(df2$UNITID == school.id[i]),c("UNITID", "CIPCODE",race.female)])
+    for (j in 1:dim(schl_data.m)[1]){ #done since we do not get to know the no of rows of the data generated by just the male
+      if (sum(match(major,schl_data.m$CIPCODE[j], nomatch=0)) > 0){ #it returns a 0 if there is no match. #it checks to match the majors we specified at the beginning
+        major.index = which(match(major,schl_data.m$CIPCODE[j]) == TRUE) 
+        for (k in 1:q){ #q is the length of all the male column
+          Male[i,major.index,k,t] <- schl_data.m[j,2+k] #Male is the 4 dimensional array created earlier
+          Female[i,major.index,k,t] <- schl_data.f[j,2+k] #Female is the 4 dimensional array created earlier
+        } 
+      }
+    }
+  }
+}
+
+
+
+## Was there a reason 1994 - 2000 was grouped and that of 2002 to 2018 was not??? ans: There was the section column
+
+for (t in 5:num_files){
+  yr <- 1994 + 2*(t-1)
+  df2 <- read.csv(paste("/Users/alhajidot/Documents/BGSU/Project/UG_data/", yr, ".csv", sep=""), header=TRUE)
+  
+  for (i in 1:n){ #n is: n <- length(school.id)
+    schl_data.m <- as.data.frame(df2[which(df2$UNITID == school.id[i]),c("UNITID", "CIPCODE",race.male)])
+    schl_data.f <- as.data.frame(df2[which(df2$UNITID == school.id[i]),c("UNITID", "CIPCODE",race.female)])
+    for (j in 1:dim(schl_data.m)[1]){
+      if (sum(match(major,schl_data.m$CIPCODE[j], nomatch=0)) > 0){
+        major.index = which(match(major,schl_data.m$CIPCODE[j]) == TRUE)
+        for (k in 1:q){
+          Male[i,major.index,k,t] <- schl_data.m[j,2+k]
+          Female[i,major.index,k,t] <- schl_data.f[j,2+k]
+        } 
+      }
+    }
+  }
+}
+
+## Combine "American Indian or Alaska Native" and "Asian /Native Hawaiian or Other Pacific Islander" i.e EFAIANM + DVEFAIM
+## Drop Race/ethnicity unknown i.e drop/ do not nclude EFUNKNM
+## Drop Engineering because more 50% time it is missing for all racial categories for all years  
+## Drop Education because many colleges didn't have it in initial years
+
+#major <- c(13, 14, 26, 27, 40, 52) # 13: Education, 14: Engineering, 26: BioSc, 27: Math, 40: PhySc, 52: Business
+# race.male <-  c("EFAIANM", "DVEFAIM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFUNKNM", "EFNRALM")
+# race.female <-  c("EFAIANW", "DVEFAIW", "EFBKAAW", "EFHISPW", "EFWHITW", "EFUNKNW", "EFNRALW")
+# p <- length(major)
+# q <- length(race.male)
+
+Male.old <- Male
+Female.old <- Female
+p <- 4 # 26: BioSc, 27: Math, 40: PhySc, 52: Business
+q <- 5 # "EFAIANM"+"DVEFAIM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFNRALM" 
+
+
+Male <- array(NA, dim = c(n,p,q,T))
+Female <- array(NA, dim = c(n,p,q,T))
+Y <- array(NA, dim = c(n,2,p,q,T)) #why 2? ans: because we have both male and female
+
+
+
+for (i in 1:n){
+  for (j in 1:p){
+    for (k in 1:q){
+      for (t in 1:T){
+        if (k == 1){
+          
+          Male[i,j,k,t] <- Male.old[i,j+2,k,t] + Male.old[i,j+2,k+1,t]  #need clarity on this
+          Female[i,j,k,t] <- Female.old[i,j+2,k,t] + Female.old[i,j+2,k+1,t]
+          
+        }else if (k == 5){
+          
+          Male[i,j,k,t] <- Male.old[i,j+2,k+2,t]
+          Female[i,j,k,t] <- Female.old[i,j+2,k+2,t]
+          
+        }else{
+          Male[i,j,k,t] <- Male.old[i,j+2,k+1,t]
+          Female[i,j,k,t] <- Female.old[i,j+2,k+1,t]
+        }
+      }
+    }
+  }
+}
+
+
+
+for (i in 1:n){
+  for (j in 1:p){
+    for (k in 1:q){
+      for (t in 1:T){
+        Y[i,1,j,k,t] <- Female[i,j,k,t]
+        Y[i,2,j,k,t] <- Male[i,j,k,t]
+      }
+    }
+  }
+}
+
+#i, no of records
+#j/p Majors
+#k/q: Race
+#t/T Year
+
+p <- 4 # 26: BioSc, 27: Math, 40: PhySc, 52: Business
+q <- 5 # "EFAIANM"+"DVEFAIM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFNRALM" 
+
+save(Y, file = "/Users/alhajidot/Documents/BGSU/Project/Y/Model Based Clustering.Rdata")
+
+Y.complete <- complete.cases(Y) #you can use the complete.cases() function to identify the rows that do not contain any missing values 
+```
+
+
+### 5-Dimension
+```{r}
+dim(Y)
+```
+
+
+- Y[i,2,j,k,t]
+- #i, no of records/institution
+- #j/p Majors
+- #k/q: Race
+- #t/T Year
+
+### Females
+```{r}
+females <- Y[, 2, , , ]
+dim(females)
+```
+
+
+
+### Males
+```{r}
+males <- Y[, 1, , , ]
+dim(males)
+```
+
+```{r}
+race.female
+```
+
+
+## Gender count by Year
+### Females per year
+
+```{r}
+female_per_year <- apply(females, 4, function(x) sum(x, na.rm = TRUE))
+female_per_year
+```
+
+### Males per year
+```{r}
+male_per_year <- apply(males, 4, function(x) sum(x, na.rm = TRUE))
+male_per_year
+```
+
+```{r}
+years <- c(1994, seq(1996, 2020, by = 2))
+years
+```
+
+
+### Number of females per year
+```{r}
+years <- c(1994, seq(1996, 2020, by = 2))
+values <- c(female_per_year)
+df <- data.frame(years, values)
+
+ggplot(df, aes(x = years, y = values)) +
+  geom_line() +
+  xlab("Year") + 
+  ylab("Value") +
+  ggtitle("Line Chart of Values over Years")
+
+```
+
+
+
+
+### Number of males per year
+```{r}
+years <- c(1994, seq(1996, 2020, by = 2))
+values <- c(male_per_year)
+df <- data.frame(years, values)
+
+ggplot(df, aes(x = years, y = values)) +
+  geom_line() +
+  xlab("Year") +
+  ylab("Value") +
+  ggtitle("Line Chart of Values over Years")
+
+```
+
+
+```{r}
+years <- 1994:2020
+years <- c(1994, seq(1996, 2020, by = 2))
+male_values <- c(male_per_year)
+female_values <- c(female_per_year)
+
+df <- data.frame(years, male_values, female_values)
+
+ggplot(df, aes(x = years)) +
+  geom_line(aes(y = male_values, color = "Male")) +
+  geom_line(aes(y = female_values, color = "Female")) +
+  xlab("Year") +
+  ylab("Gender Count") +
+  ggtitle("Line Chart of Male and Female Values over Years") +
+  scale_color_manual(values = c("Male" = "blue", "Female" = "pink")) +
+  theme(legend.position = "top")
+
+```
+
+
+- Y[i,2,j,k,t]
+- #i, no of records/institution
+- #j/p Majors
+- #k/q: Race
+- #t/T Year
+
+
+
+```{r}
+T <- 14
+year <- list()
+for (t in 1:T){
+  year[t] <- 1994 + 2*(t-1)
+}
+#year
+```
+
+
+
+### "BioSc", 
+
+```{r}
+#dim(females)
+BioSc <- females[, 1, , ]
+#dim(BioSc)
+#BioSc
+
+female_BioSc_major_per_year_by_ethnicity <- apply(BioSc, c(2,3), function(x) sum(x, na.rm = TRUE)) 
+female_BioSc_major_per_year_by_ethnicity
+```
+
+
+```{r}
+colnames(female_BioSc_major_per_year_by_ethnicity) <- c(paste0("yr", year))
+rownames(female_BioSc_major_per_year_by_ethnicity) <-  c("EFDVEFAIF", "EFBKAAF", "EFHISPF", "EFWHITF", "EFNRALF" )
+female_BioSc_major_per_year_by_ethnicity
+
+```
+
+
+```{r}
+female_BioSc_major_per_year_by_ethnicity <- as.data.frame(female_BioSc_major_per_year_by_ethnicity)
+FBM_byyear_by_enthnicity <- female_BioSc_major_per_year_by_ethnicity %>%
+  mutate(Ethnicity = row.names(female_BioSc_major_per_year_by_ethnicity))
+rownames(FBM_byyear_by_enthnicity) <- NULL
+FBM_byyear_by_enthnicity
+```
+
+```{r}
+
+FBM_byyear_by_enthnicity <- reshape2::melt(FBM_byyear_by_enthnicity, id.vars = "Ethnicity")
+head(FBM_byyear_by_enthnicity)
+```
+```{r}
+ggplot(FBM_byyear_by_enthnicity, aes(x = Ethnicity, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  #geom_text(aes(label = value)) +
+  xlab("Ethnicity") +
+  ylab("No of Females") +
+  ggtitle("Comparison of Female's Ethnicity by Year") +
+  theme(legend.title = element_blank())
+```
+
+```{r}
+ggplot(FBM_byyear_by_enthnicity, aes(x = Ethnicity, y = value)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  facet_wrap(~variable, nrow = 4)
+  ggtitle("Race Comparison for Females") +
+  theme(legend.title = element_blank())
+```
+
+
+### FBM_byyear_by_enthnicity
+```{r}
+female_BioSc_major_per_year_by_ethnicity <- as.data.frame(female_BioSc_major_per_year_by_ethnicity)
+FBM_byyear_by_enthnicity <- female_BioSc_major_per_year_by_ethnicity %>%
+  mutate(Ethnicity = row.names(female_BioSc_major_per_year_by_ethnicity))
+rownames(FBM_byyear_by_enthnicity) <- NULL
+head(FBM_byyear_by_enthnicity)
+```
+
+
+### 
+```{r}
+ggplot(FBM_byyear_by_enthnicity, aes(x = Ethnicity, y = yr1994)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  xlab("Ehnicity") +
+  ylab("No of Females") +
+  ggtitle("Ethnicity Comparison for Females in year 1994") +
+  theme(legend.title = element_blank())
+
+```
+
+
+
+
+
+### "EFDVEFAIM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFNRALM" 
+
+### No of major per year for females
+```{r}
+female_major_per_year <- apply(females, c(2,4), function(x) sum(x, na.rm = TRUE)) 
+female_major_per_year
+```
+
+
+"Math", "PhySc", "Business"
+```{r}
+colnames(female_major_per_year) <- c(paste0("yr", year))
+rownames(female_major_per_year) <-  c( "BioSc", "Math", "PhySc", "Business")
+female_major_per_year
+```
+
+
+
+```{r}
+FM_per_year <- as.data.frame(female_major_per_year)
+FM_per_year <- FM_per_year %>%
+  mutate(Major = row.names(female_major_per_year))
+rownames(FM_per_year) <- NULL
+FM_per_year
+```
+
+
+### Female major per year 
+### Year 1994
+```{r}
+ggplot(FM_per_year, aes(x = Major, y = yr1994)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = yr1994), vjust = -0.5, color = "black") +
+  xlab("Major") +
+  ylab("No of Females") +
+  ggtitle("Major Comparison for Females in year 1994") +
+  theme(legend.title = element_blank())
+```
+
+### Year 1996
+```{r}
+ggplot(FM_per_year, aes(x = Major, y = yr1996)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = yr1996),   vjust = -0.5, color = "black") +
+  xlab("Major") +
+  ylab("No of Females") +
+  ggtitle("Major Comparison for Females in year 1996") +
+  theme(legend.title = element_blank())
+```
+
+### Year 1998
+```{r}
+#par(mfrow=c(1,2))
+
+ggplot(FM_per_year, aes(x = Major, y = yr1998)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = yr1998), vjust = -0.5, color = "black") +
+  xlab("Major") +
+  ylab("No of Females") +
+  ggtitle("Major Comparison for Females in year 1998") +
+  theme(legend.title = element_blank())
+```
+
+### Year 2000
+```{r}
+ggplot(FM_per_year, aes(x = Major, y = yr2000)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = yr2000),   vjust = -0.5, color = "black") +
+  xlab("Major") +
+  ylab("No of Females") +
+  ggtitle("Major Comparison for Females in year 2000") +
+  theme(legend.title = element_blank())
+
+```
+
+
+
+### Year 2002
+```{r}
+ggplot(FM_per_year, aes(x = Major, y = yr2002)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = yr2002),   vjust = -0.5, color = "black") +
+  xlab("Major") +
+  ylab("No of Females") +
+  ggtitle("Major Comparison for Females in year 2002") +
+  theme(legend.title = element_blank())
+
+```
+
+
+
+### Year 2004
+```{r}
+ggplot(FM_per_year, aes(x = Major, y = yr2004)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = yr2004),   vjust = -0.5, color = "black") +
+  xlab("Major") +
+  ylab("No of Females") +
+  ggtitle("Major Comparison for Females in year 2004") +
+  theme(legend.title = element_blank())
+
+```
+
+
+### Year 2006
+```{r}
+ggplot(FM_per_year, aes(x = Major, y = yr2006)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = yr2006),   vjust = -0.5, color = "black") +
+  xlab("Major") +
+  ylab("No of Females") +
+  ggtitle("Major Comparison for Females in year 2006") +
+  theme(legend.title = element_blank())
+
+```
+
+
+
+
+#### Thoughts about plotting the graph using loops
+```{r}
+FM_per_year
+```
+
+
+```{r}
+labels <- list()
+col_names <- list()
+for (t in 1:num_files){ 
+  year <- 1994 + 2*(t-1)
+  col_names[[t]] <- paste("yr", year, sep = "")
+  labels[[t]] <- FM_per_year[,col_names[[t]]]
+}
+
+```
+
+```{r}
+labels
+```
+```{r}
+col_names
+```
+
+
+####
+
+```{r}
+plot_females_per_major <- function(data, num_files) {
+  plot_list <- list()
+  labels <- list()
+  col_names <- list()
+  
+  for (t in 1:num_files){ 
+    year <- 1994 + 2*(t-1)
+    col_names[[t]] <- paste("yr", year, sep = "")
+    labels[[t]] <- FM_per_year[,col_names[[t]]]
+  }
+  
+  for (t in 1:num_files){ 
+    year <- 1994 + 2*(t-1)
+    #col_name <- paste("yr", year, sep = "")
+    #labels <- FM_per_year[,col_name]
+    plot_list[[t]] <- ggplot(FM_per_year, aes(x = Major, y = labels[[t]])) +
+      geom_bar(stat = "identity", fill = "purple") +
+      geom_text(aes(label = labels[[t]]), vjust = -0.5, color = "black") +
+      xlab("Major") +
+      ylab("No of Females") +
+      ggtitle( paste("Major Comparison for Females in year", year, sep = " ")) +
+      theme(legend.title = element_blank())
+  }
+
+  for (i in 1:num_files) {
+    print(plot_list[[i]])
+  }
+}
+
+# Use the function
+plot_females_per_major(FM_per_year, num_files)
+
+```
+
+
+
+### Year 2004
+```{r}
+ggplot(FM_per_year, aes(x = Major, y = yr2004)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = yr2004),   vjust = -0.5, color = "black") +
+  xlab("Major") +
+  ylab("No of Females") +
+  ggtitle("Major Comparison for Females in year 2002") +
+  theme(legend.title = element_blank())
+
+```
+
+
+
+
+```{r}
+FM_per_year <- reshape2::melt(FM_per_year, id.vars = "Major")
+head(FM_per_year)
+```
+```{r}
+ggplot(FM_per_year, aes(x = Major, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  #geom_text(aes(label = value)) +
+  xlab("Major") +
+  ylab("No of Females") +
+  ggtitle("Comparison of Female's Major by Year") +
+  theme(legend.title = element_blank())
+```
+
+
+
+```{r}
+T <- 14
+year <- list()
+for (t in 1:T){
+  year[t] <- 1994 + 2*(t-1)
+}
+#yr
+#c(yr)
+```
+
+
+### No of race per year for females
+```{r}
+female_race_per_year <- apply(females, 3:4, function(x) sum(x, na.rm = TRUE)) 
+colnames(female_race_per_year) <- c(paste0("yr", year))
+rownames(female_race_per_year) <-  c("EFDVEFAIF", "EFBKAAF", "EFHISPF", "EFWHITF", "EFNRALF" )
+female_race_per_year
+```
+
+### No of race per year for males
+```{r}
+FR_per_year <- as.data.frame(female_race_per_year)
+FR_per_year <- FR_per_year %>%
+  mutate(Ethnicity = row.names(female_race_per_year))
+rownames(FR_per_year) <- NULL
+head(FR_per_year)
+```
+
+
+
+```{r}
+FR_per_year <- reshape2::melt(FR_per_year, id.vars = "Ethnicity")
+head(FR_per_year)
+```
+```{r}
+FR_per_year$year <- as.numeric(gsub("yr", "", FR_per_year$variable))
+head(FR_per_year)
+```
+
+```{r}
+# colors <- c("red", "blue", "green", "purple", "orange")
+# names(colors) <- c("EFDVEFAIM", "EFBKAAM", "EFHISPM", "EFWHITM", "EFNRALM")
+ggplot(FR_per_year, aes(x = year, y = value, color = Ethnicity)) +
+  geom_line() +
+  #scale_color_manual(values = colors, name = "Race") +
+  xlab("Year") +
+  ylab("Value") +
+  ggtitle("Line Plot of Values by Row Name") +
+  theme_classic()
+
+```
+
+
+
+### Getting the total % number of outliers
+```{r}
+percent_missing <- function(array) {
+  total_elements <- prod(dim(array))
+  missing_elements <- sum(is.na(array))
+  return(missing_elements/total_elements * 100)
+}
+
+percent_missing(Y)
+```
+
+
+### Getting Outliers
+```{r}
+find_missing_values_and_percentage <- function(array) {
+  missing_values <- 0
+  total_values <- 0
+  dims <- dim(array)
+  
+  for (i in 1:dims[1]) {
+    for (g in 1:dims[2]) {
+      for (j in 1:dims[3]) {
+        for (k in 1:dims[4]) {
+          for (t in 1:dims[5]) {
+            total_values <- total_values + 1
+            if (is.na(array[i,g,j,k,t])){
+              missing_values <- missing_values + 1
+            }
+          }
+        }
+      }
+    }
+  }
+  missing_values_percentage <- (missing_values / total_values) * 100
+  return (c(missing_values, total_values, missing_values_percentage))
+}
+
+```
+
+```{r}
+find_missing_values_and_percentage(Y)
+```
+
+
+```{r}
+# find_missing_values_percentage <- function(array) {
+#   dims <- dim(array)
+#   missing_values_count <- rep(0, 5)
+#   total_values_count <- rep(1, 5)
+#   
+#   for (i in 1:dims[1]) {
+#     for (g in 1:dims[2]) {
+#       for (j in 1:dims[3]) {
+#         for (k in 1:dims[4]) {
+#           for (t in 1:dims[5]) {
+#             if (is.na(array[i,g,j,k,t])) {
+#               missing_values_count[1] <- missing_values_count[1] + 1
+#             }
+#             
+#             total_values_count[1] <- total_values_count[1] + 1
+#             
+#             if (is.na(array[i,g,j,k,])) {
+#               
+#               missing_values_count[2] <- missing_values_count[2] + 1
+#               
+#             }
+#             
+#             total_values_count[2] <- total_values_count[2] + 1
+#             
+#             if (is.na(array[i,g,j,])) {
+#               missing_values_count[3] <- missing_values_count[3] + 1
+#             }
+#             total_values_count[3] <- total_values_count[3] + 1
+#             if (is.na(array[i,g,])) {
+#               missing_values_count[4] <- missing_values_count[4] + 1
+#             }
+#             total_values_count[4] <- total_values_count[4] + 1
+#             if (is.na(array[i,])) {
+#               missing_values_count[5] <- missing_values_count[5] + 1
+#             }
+#             total_values_count[5] <- total_values_count[5] + 1
+#           }
+#         }
+#       }
+#     }
+#   }
+#   
+#   return (missing_values_count / total_values_count) * 100
+# }
+
+```
+
+
+```{r}
+#find_missing_values_percentage(Y)
+```
+
+
+```{r}
+# find_missing_values_percentage <- function(array) {
+#   missing_values_counts <- c(0, 0, 0, 0, 0)
+#   total_values_counts <- c(0, 0, 0, 0, 0)
+#   
+#   for (i in 1:dim(array)[1]) {
+#     for (g in 1:dim(array)[2]) {
+#       for (j in 1:dim(array)[3]) {
+#         for (k in 1:dim(array)[4]) {
+#           for (t in 1:dim(array)[5]) {
+#             total_values_counts[1] <- total_values_counts[1] + 1
+#             total_values_counts[2] <- total_values_counts[2] + 1
+#             total_values_counts[3] <- total_values_counts[3] + 1
+#             total_values_counts[4] <- total_values_counts[4] + 1
+#             total_values_counts[5] <- total_values_counts[5] + 1
+#             
+#             if (is.na(array[i, g, j, k, t])) {
+#               missing_values_counts[1] <- missing_values_counts[1] + 1
+#               missing_values_counts[2] <- missing_values_counts[2] + 1
+#               missing_values_counts[3] <- missing_values_counts[3] + 1
+#               missing_values_counts[4] <- missing_values_counts[4] + 1
+#               missing_values_counts[5] <- missing_values_counts[5] + 1
+#             }
+#           }
+#         }
+#       }
+#     }
+#   }
+#   
+#   return (missing_values_counts / total_values_counts) * 100
+# }
+
+```
+
+
+
+```{r}
+# find_missing_values_percentage(Y)
+```
+
+```{r}
+# find_missing_values_by_dimension <- function(array) {
+#   missing_values_by_dimension <- list(0, 0, 0, 0, 0)
+#   dims <- dim(array)
+#   for (i in 1:dims[1]) {
+#     for (g in 1:dims[2]) {
+#       for (j in 1:dims[3]) {
+#         for (k in 1:dims[4]) {
+#           for (t in 1:dims[5]) {
+#             if (is.na(array[i, g, j, k, t])) {
+#               missing_values_by_dimension[[1]] <- missing_values_by_dimension[[1]] + 1
+#               missing_values_by_dimension[[2]] <- missing_values_by_dimension[[2]] + 1
+#               missing_values_by_dimension[[3]] <- missing_values_by_dimension[[3]] + 1
+#               missing_values_by_dimension[[4]] <- missing_values_by_dimension[[4]] + 1
+#               missing_values_by_dimension[[5]] <- missing_values_by_dimension[[5]] + 1
+#             }
+#           }
+#         }
+#       }
+#     }
+#   }
+#   missing_values_percentage_by_dimension <- sapply(missing_values_by_dimension, function(x) x / dims[1] * 100)
+#   return(missing_values_percentage_by_dimension)
+# }
+
+```
+
+```{r}
+# find_missing_values_by_dimension(Y)
+```
+
+```{r}
+# missing_percentage
+```
+
+        Y[i,1,j,k,t] <- Female[i,j,k,t]
+        Y[i,2,j,k,t] <- Male[i,j,k,t]
+```{r}
+missing_vals <- percent_missing(Y[,2,,,]) 
+```
+
+```{r}
+# count <- 0
+# total_elements <- dim(Y)[1] * dim(Y)[2] * dim(Y)[3] * dim(Y)[4] * dim(Y)[5]
+# for (i in 1:dim(Y)[1]){
+#   for (g in 1:dim(Y)[2]) {
+#     for (j in 1:dim(Y)[3]){
+#       for (k in 1:dim(Y)[4]){
+#         for (t in 1:dim(Y)[5]){
+#           if (is.na(Y[i][g][j][k][t])){
+#             count <- count + 1
+#           }
+#         }
+#       }
+#     }
+#   }
+# }
+# missing_percentage <- 100 * count / total_elements
+# missing_percentage
+```
+
+
+
+```{r}
+# Create a sample data frame with the given dimensions
+# df <- data.frame(Institution=rep(1:970, each=2*4*5*14),
+#                  Gender=rep(rep(c(1,2), each=4*5*14), 970),
+#                  Major=rep(rep(rep(c("BioSc", "Math", "PhySc", "Business"), each=5*14), 2), 970),
+#                  Race=rep(rep(rep(rep(c("American Indian", "Black", "Hispanic", "White", "Hawaiian"), each=14), 4), 2), 970),
+#                  Year=rep(rep(rep(rep(2000:2014, 5), 4), 2), 970))
+# 
+# # Add missing values to the data frame
+# df[sample(nrow(df), 1000), "Year"] <- NA
+# 
+# # Calculate the percentage of missing values for each dimension
+# df$Gender_Missing <- is.na(df$Gender)
+# df$Major_Missing <- is.na(df$Major)
+# df$Race_Missing <- is.na(df$Race)
+# df$Year_Missing <- is.na(df$Year)
+# 
+# percentage_missing_Gender <- mean(df$Gender_Missing) * 100
+# percentage_missing_Major <- mean(df$Major_Missing) * 100
+# percentage_missing_Race <- mean(df$Race_Missing) * 100
+# percentage_missing_Year <- mean(df$Year_Missing) * 100
+# 
+# cat("Percentage of missing values for Gender:", percentage_missing_Gender, "%\n")
+# cat("Percentage of missing values for Major:", percentage_missing_Major, "%\n")
+# cat("Percentage of missing values for Race:", percentage_missing_Race, "%\n")
+# cat("Percentage of missing values for Year:", percentage_missing_Year, "%\n")
+# 
+# # Calculate the percentage of missing values for Black Females in BioSc in 2004
+# df_Black_Female_BioSc_2004 <- df[df$Gender == 2 & df$Major == "BioSc" & df$Race == "Black" & df$Year == 2004, ]
+# percentage_missing_Black_Female_BioSc_2004 <- mean(is.na(df_Black_Female_BioSc_2004$Year)) * 100
+# cat("Percentage of missing values for Black Females in BioSc in 2004:", percentage_missing_Black_Female_BioSc_2004, "%\n")
+
+```
+
+

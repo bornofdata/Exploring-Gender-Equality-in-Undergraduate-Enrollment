@@ -1,0 +1,1184 @@
+---
+title: "Mixture Model"
+author: "Kehinde Fagbamigbe"
+date: "7/26/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+#Bimodal
+
+```{r}
+x = seq(-5,12, length = 100)
+x
+```
+
+```{r}
+class(x)
+```
+
+
+
+```{r}
+y = 0.6*dnorm(x,0,1) + 0.4*dnorm(x,5,2)
+#first density of the normal distribution has a mean of zero and SD of 1
+
+#second density of the normal distribution has a mean of 5 and SD of 2
+
+#to obtain a bidomal type of curve, the mean of the distributions must be far apart and the variance will be small/narrow
+```
+
+
+
+```{r}
+par(mar = c(4,4,1,1)+0.1) #similar to figure in python
+plot(x,y, type = "l", ylab = "Density", las = 1)
+```
+#Trimodal
+```{r}
+x = seq(-5,15, length = 100)
+y = 0.6*dnorm(x,0,1) + 0.4*dnorm(x,5,2) + 0.8*dnorm(x,10,1)
+par(mar = c(4,4,1,1)+0.1) #similar to figure in python
+plot(x,y, type = "l", ylab = "Density", las = 1)
+
+```
+# unimodal and skewed mixture of Gaussians
+#Skewness
+
+```{r}
+x = seq(-5,12, length = 100)
+y = 0.55*dnorm(x,0,sqrt(2)) + 0.45*dnorm(x,3,4)
+
+#first density of the normal distribution has a mean of zero and SD of square root of 2
+
+#second density of the normal distribution has a mean of 3 and SD of 4
+
+#to obtain a skewed type of curve, the mean of the distributions must be close to each other and the variance will far apart
+
+
+par(mar = c(4,4,1,1)+0.1) #similar to figure in python
+plot(x,y, type = "l", ylab = "Density", las = 1)
+```
+# unimodal, symmetric and heavy tailed mixture of Gaussians
+# Heavy tailed
+```{r}
+x = seq(-12,12, length = 100)
+y = 0.4*dnorm(x,0,sqrt(2)) + 0.4*dnorm(x,0,sqrt(16)) + 0.2*dnorm(x,0,sqrt(20))
+z = dnorm(x,0,sqrt( 0.4*2 + 0.4*16 + 0.2*20 )) 
+par(mar = c(4,4,1,1)+0.1) #similar to figure in python
+plot(x,y, type = "l", ylab = "Density", las = 1)
+lines(x,z, lty = 2)
+legend(2, 0.16, c("Mixture", "Gaussian"), lty = c(1,2), bty = "n", cex = 0.77)
+```
+## Zero Inflated Distributions (For Discrete Distribution)
+
+# Zero-Inflated Counts
+#An example of this is when you are trying to know the number of eggs in a bird's nest
+```{r}
+
+x = seq(0,15)
+y = dnbinom(x,8,0.6) #dnbino is called negative binomial
+#probability of successs is 0.6
+#Bernoulli trials to stop after 8 successes
+par(mfrow = c(2,1))
+par(mar = c(4,4,1,1)+0.1) #similar to figure in python
+barplot(y, names.arg = x, las = 1, xlab = "x", ylab = "Probability mass", ylim = c(0,0.22), main = "Negative Binomial", border = NA)
+
+
+z = 0.2 * c(1,rep(0,length(x)-1)) + (1-0.2)*y
+# 0.2 * c(1,rep(0,length(x)-1)) means giving 20% to the point mass at Zero
+# (1-0.2)*y means giving 80% to the negative binomial
+par(mar = c(4,4,1,1)+0.1)
+barplot(z, names.arg = x, las = 1, xlab = "x", ylab = "Probability mass", ylim = c(0,0.22), main = "Zero-inflated Negative Binomial")
+
+```
+
+#Example of Continuous distribution: log-normal distribution, weibull distribution, exponential distribution
+# Zero-Infalted Continuous Distribution
+#this is the combination of the point mass at zero with a continuous distribution
+#an example of this is the defect of some bulbs from the factory when you are trying to calculate the lifetime of a bulb
+```{r}
+x = seq(-2,15, length = 200)
+y = plnorm(x,1.5,0.5) #plnorm is called density of the log normal distribution
+#log normal distribution is the distribution of a number whose logarithm follows a normal distribution
+#here it has a mean of 1.5 and a standard deviation of 0.5
+z = 0.3 * as.numeric(x>=0) + (1-0.3)*y
+par(mfrow = c(1,1))
+par(mar = c(4,4,1,1)+0.1)
+plot(x,y, type = "l", ylab = "Cumulative Distribution Function", xlab = "x", las = 1, lty = 2, main = "Zero-inflated log Gaussian distribution")
+lines(x,z, lty = 1)
+legend(4, 0.45, c("Zero infla. log Gaussian", "Log Gaussian"), lty = c(1,2), bty = "n")
+
+
+```
+ ## Sampling from a mixture model
+ 
+```{r}
+#Generate n observations from a mixture of two Gaussian Distributions
+
+n = 50 #no of observation
+w = c(0.6,0.4) #the weight of the two normal/gaussian distributions
+mu = c(0,5) #the mean of the two normal/gaussian distributions
+sigma = c(1,2) #the standard deviations of the two normal/gaussian distributions
+
+#which component generate which of the observations
+
+cc = sample(1:2, n, replace = T, prob = w)
+x = rnorm(n, mu[cc], sigma[cc])
+
+#Plot G(x) (the marginal density x) along the observations just sampled
+xx = seq(-5,12, length = 200)
+yy = w[1]*dnorm(xx, mu[1], sigma[1]) + w[2]*dnorm(xx, mu[2], sigma[2]) #Indexing in R starts from 1
+par(mar = c(4,4,1,1)+0.1)
+plot(xx, yy, type = "l", ylab = "Density", las = 1)
+points(x, y = rep(0,n), pch = 1)
+points(x, y = rep(0,n), pch = 1, col = cc)
+
+```
+
+# Enter code to sample 200 random numbers from a mixture of 3 Poisson distributions with means 1, 2 and 6 and weights 0.7, 0.2 # and 0.1, respectively.
+ 
+```{r}
+n = 200
+w = c(0.7, 0.2, 0.1)  # Weights
+lambda = c(1, 2, 6) # Means
+cc = sample(1:3, n, replace=T, prob=w)
+x = rpois(n, lambda[cc])
+empfreq = table(factor(x, levels=seq(0, max(x))))/n
+#The main difficulty here is how to properly compute the frequencies using R, rather than anything that is specific to mixture models.  Using the function table directly on the vector x will ignore values with zero counts.  Similarly, the function tabulate will ignore the x = 0 case.  First converting the vector x into a factor while ensuring that any integer between 0 and the maximum in the sample are valid factors avoids the
+empfreq = table(x)/n
+#Yes for some datasets, but might fail.  Use this category if, for example, the function table was used directly on x,
+barplot(empfreq)
+```
+```{r}
+x
+```
+ 
+ 
+# Modify the code above to sample 100 random numbers from a mixture of 4 exponential distributions with means 1, 4, 7 and 10 and weights 0.3, 0.25, 0.25 and 0.2, respectively.  Use these sample to approximate the mean and variance of the mixture.
+```{r}
+# # Generate n observations from a mixture of two Gaussian 
+# # distributions
+# n     = 100           # Size of the sample to be generated
+# w     = c(0.3, 0.25, 0.25, 0.2)  # Weights
+# mu    = c(1,4,7,10)      # Means
+# cc    = sample(1:4, n, replace=T, prob=w)
+# x = dexp(n, rate = 1/mu[cc], log = FALSE)
+```
+ 
+ 
+```{r}
+n = 120
+x = rep(0,n)
+x
+```
+ 
+ 
+```{r}
+n = 120
+kk = 2
+w = 0.6
+mu = rep(0,kk)
+mu[1] = 0
+mu[2] = 5
+sigma = 1
+cc = sample(1:kk, n, replace = T, prob = c(w,1-w))
+x = rep(0,n)
+for(i in 1:n){
+  x[i] = rnorm(1, mu)
+}
+
+```
+ 
+ 
+```{r}
+#### Example of an EM algorithm for fitting a location mixture of 2 Gaussian components
+#### The algorithm is tested using simulated data
+
+## Clear the environment and load required libraries
+rm(list=ls())
+set.seed(81196)    # So that results are reproducible (same simulated data every time)
+
+## Generate data from a mixture with 2 components
+KK         = 2
+w.true     = 0.6  # True weights associated with the components
+mu.true    = rep(0, KK)
+mu.true[1] = 0   # True mean for the first component
+mu.true[2] = 5   # True mean for the second component
+sigma.true = 1   # True standard deviation of all components
+n  = 120         # Number of observations to be generated
+cc = sample(1:KK, n, replace=T, prob=c(w.true,1-w.true))
+x  = rep(0, n)
+for(i in 1:n){
+  x[i] = rnorm(1, mu.true[cc[i]], sigma.true)  #normal distribution
+}
+
+# Plot the true density
+par(mfrow=c(1,1)) #a figure frame
+xx.true = seq(-8,11,length=200)
+yy.true = w.true*dnorm(xx.true, mu.true[1], sigma.true) + 
+          (1-w.true)*dnorm(xx.true, mu.true[2], sigma.true) 
+plot(xx.true, yy.true, type="l", xlab="x", ylab="True density", lwd=2)
+points(x, rep(0,n), col=cc)
+```
+
+
+# EM algorithm
+
+```{r}
+## Run the actual EM algorithm
+## Initialize the parameters
+w     = 1/2                         #Assign equal weight to each component to start with
+mu    = rnorm(KK, mean(x), sd(x))   #Random cluster centers randomly spread over the support of the data
+sigma = sd(x)                       #Initial standard deviation
+
+# Plot the initial guess for the density
+xx = seq(-8,11,length=200)
+yy = w*dnorm(xx, mu[1], sigma) + (1-w)*dnorm(xx, mu[2], sigma)
+plot(xx, yy, type="l", ylim=c(0, max(yy)), xlab="x", ylab="Initial density")
+points(x, rep(0,n), col=cc)
+```
+
+
+
+
+```{r}
+s  = 0 #just a counter of the iteration
+sw = FALSE #SW = Switch. This just decides when the algorithm need to end
+QQ = -Inf
+QQ.out = NULL #used to understand and monitor convergence
+epsilon = 10^(-5) #stopping critera for the EM Algorithm
+
+#The EM Algorithm
+##Checking convergence of the algorithm
+while(!sw){
+  ## E step
+  v = array(0, dim=c(n,KK))
+  v[,1] = log(w) + dnorm(x, mu[1], sigma, log=TRUE)    #Compute the log of the weights
+  v[,2] = log(1-w) + dnorm(x, mu[2], sigma, log=TRUE)  #Compute the log of the weights
+  
+  for(i in 1:n){
+    v[i,] = exp(v[i,] - max(v[i,]))/sum(exp(v[i,] - max(v[i,])))  #Go from logs to actual weights in a numerically stable manner
+  }
+  
+## M step
+  # Weights
+  w = mean(v[,1])
+  mu = rep(0, KK)
+  for(k in 1:KK){
+    for(i in 1:n){
+      mu[k]    = mu[k] + v[i,k]*x[i]
+    }
+    mu[k] = mu[k]/sum(v[,k])
+  }
+  # Standard deviations
+  sigma = 0
+  for(i in 1:n){
+    for(k in 1:KK){
+      sigma = sigma + v[i,k]*(x[i] - mu[k])^2
+    }
+  }
+  sigma = sqrt(sigma/sum(v))
+
+##Check convergence
+  QQn = 0
+  for(i in 1:n){
+    QQn = QQn + v[i,1]*(log(w) + dnorm(x[i], mu[1], sigma, log=TRUE)) +
+                v[i,2]*(log(1-w) + dnorm(x[i], mu[2], sigma, log=TRUE))
+  }
+  if(abs(QQn-QQ)/abs(QQn)<epsilon){
+    sw=TRUE
+  }
+  QQ = QQn
+  QQ.out = c(QQ.out, QQ)
+  s = s + 1
+  print(paste(s, QQn))
+
+#Plot current estimate over data
+  layout(matrix(c(1,2),2,1), widths=c(1,1), heights=c(1.3,3))
+  par(mar=c(3.1,4.1,0.5,0.5))
+  plot(QQ.out[1:s],type="l", xlim=c(1,max(10,s)), las=1, ylab="Q", lwd=2)
+  
+  par(mar=c(5,4,1.5,0.5))
+  xx = seq(-8,11,length=200)
+  yy = w*dnorm(xx, mu[1], sigma) + (1-w)*dnorm(xx, mu[2], sigma)
+  plot(xx, yy, type="l", ylim=c(0, max(c(yy,yy.true))), main=paste("s =",s,"   Q =", round(QQ.out[s],4)), lwd=2, col="red", lty=2, xlab="x", ylab="Density")
+  lines(xx.true, yy.true, lwd=2)
+  points(x, rep(0,n), col=cc)
+  legend(6,0.22,c("Truth","Estimate"),col=c("black","red"), lty=c(1,2))
+}
+```
+
+
+
+
+```{r}
+#Plot final estimate over data
+layout(matrix(c(1,2),2,1), widths=c(1,1), heights=c(1.3,3))
+par(mar=c(3.1,4.1,0.5,0.5)) #figure for plot
+plot(QQ.out[1:s],type="l", xlim=c(1,max(10,s)), las=1, ylab="Q", lwd=2)
+
+par(mar=c(5,4,1.5,0.5))
+xx = seq(-8,11,length=200)
+yy = w*dnorm(xx, mu[1], sigma) + (1-w)*dnorm(xx, mu[2], sigma)
+plot(xx, yy, type="l", ylim=c(0, max(c(yy,yy.true))), main=paste("s =",s,"   Q =", round(QQ.out[s],4)), lwd=2, col="red", lty=2, xlab="x", ylab="Density")
+lines(xx.true, yy.true, lwd=2)
+points(x, rep(0,n), col=cc)
+legend(6,0.22,c("Truth","Estimate"),col=c("black","red"), lty=c(1,2), bty="n")
+
+
+```
+ 
+```{r}
+#### Example of an EM algorithm for fitting a mixtures of K p-variate Gaussian components
+#### The algorithm is tested using simulated data
+
+## Clear the environment and load required libraries
+rm(list=ls())
+library(mvtnorm)    # Multivariate normals are not default in R
+library(ellipse)    # Required for plotting
+set.seed(63252)     # For reproducibility
+
+## Generate data from a mixture with 3 components
+KK      = 3
+p       = 2
+w.true = c(0.5,0.3,0.2)  # True weights associated with the components
+mu.true     = array(0, dim=c(KK,p))
+mu.true[1,] = c(0,0)   #True mean for the first component
+mu.true[2,] = c(5,5)   #True mean for the second component
+mu.true[3,] = c(-3,7)   #True mean for the third component
+Sigma.true      = array(0, dim=c(KK,p,p))
+Sigma.true[1,,] = matrix(c(1,0,0,1),p,p)   #True variance for the first component
+Sigma.true[2,,] = matrix(c(2,0.9,0.9,1),p,p)   #True variance for the second component
+Sigma.true[3,,] = matrix(c(1,-0.9,-0.9,4),p,p)   #True variance for the third component
+n  = 120
+cc = sample(1:3, n, replace=T, prob=w.true)
+x  = array(0, dim=c(n,p))
+for(i in 1:n){
+  x[i,] = rmvnorm(1, mu.true[cc[i],], Sigma.true[cc[i],,])
+}
+```
+
+
+```{r}
+par(mfrow=c(1,1))
+plot(x[,1], x[,2], col=cc, type="n", xlab=expression(x[1]), ylab=expression(x[2]))
+text(x[,1], x[,2], seq(1,n), col=cc, cex=0.6)
+
+
+for(k in 1:KK){
+  lines(ellipse(x=Sigma.true[k,,], centre=mu.true[k,], level=0.50), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma.true[k,,], centre=mu.true[k,], level=0.82), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma.true[k,,], centre=mu.true[k,], level=0.95), col="grey", lty=2, lwd=2)
+  
+}
+title(main="Data + True Components")
+```
+
+
+```{r}
+### Run the EM algorithm
+## Initialize the parameters
+w   = rep(1,KK)/KK  #Assign equal weight to each component to start with
+mu  = rmvnorm(KK, apply(x,2,mean), var(x))   #RandomCluster centers randomly spread over the support of the data
+Sigma      = array(0, dim=c(KK,p,p))  #Initial variances are assumed to be the same
+Sigma[1,,] = var(x)/KK  
+Sigma[2,,] = var(x)/KK
+Sigma[3,,] = var(x)/KK
+
+par(mfrow=c(1,1))
+plot(x[,1], x[,2], col=cc, xlab=expression(x[1]), ylab=expression(x[2]))
+for(k in 1:KK){
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.50), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.82), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.95), col="grey", lty=2, lwd=2)
+}
+```
+
+
+```{r}
+s       = 0
+sw      = FALSE
+QQ      = -Inf
+QQ.out  = NULL
+epsilon = 10^(-5)
+
+while(!sw){
+  ## E step
+  v = array(0, dim=c(n,KK))
+  for(k in 1:KK){
+    v[,k] = log(w[k]) + dmvnorm(x, mu[k,], Sigma[k,,],log=TRUE)  #Compute the log of the weights
+  }
+  for(i in 1:n){
+    v[i,] = exp(v[i,] - max(v[i,]))/sum(exp(v[i,] - max(v[i,])))  #Go from logs to actual weights in a numerically stable manner
+  }
+  
+  ## M step
+  w     = apply(v,2,mean)
+  mu    = array(0, dim=c(KK, p))
+  for(k in 1:KK){
+    for(i in 1:n){
+      mu[k,]    = mu[k,] + v[i,k]*x[i,]
+    }
+    mu[k,] = mu[k,]/sum(v[,k])
+  }
+  Sigma = array(0, dim=c(KK, p, p))
+  for(k in 1:KK){
+    for(i in 1:n){
+      Sigma[k,,] = Sigma[k,,] + v[i,k]*(x[i,] - mu[k,])%*%t(x[i,] - mu[k,])
+    }
+    Sigma[k,,] = Sigma[k,,]/sum(v[,k])
+  }
+  
+  ##Check convergence
+  QQn = 0
+  for(i in 1:n){
+    for(k in 1:KK){
+      QQn = QQn + v[i,k]*(log(w[k]) + dmvnorm(x[i,],mu[k,],Sigma[k,,],log=TRUE))
+    }
+  }
+  if(abs(QQn-QQ)/abs(QQn)<epsilon){
+    sw=TRUE
+  }
+  QQ = QQn
+  QQ.out = c(QQ.out, QQ)
+  s = s + 1
+  print(paste(s, QQn))
+  
+  #Plot current components over data
+  layout(matrix(c(1,2),2,1), widths=c(1,1), heights=c(1.3,3))
+  par(mar=c(3.1,4.1,0.5,0.5))
+  plot(QQ.out[1:s],type="l", xlim=c(1,max(10,s)), las=1, ylab="Q")
+  
+  par(mar=c(5,4,1,0.5))
+  plot(x[,1], x[,2], col=cc, main=paste("s =",s,"   Q =", round(QQ.out[s],4)), 
+       xlab=expression(x[1]), ylab=expression(x[2]), lwd=2)
+  for(k in 1:KK){
+    lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.50), col="grey", lty=2, lwd=2)
+    lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.82), col="grey", lty=2, lwd=2)
+    lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.95), col="grey", lty=2, lwd=2)
+  }
+}
+
+#Plot current components over data
+layout(matrix(c(1,2),2,1), widths=c(1,1), heights=c(1.3,3))
+par(mar=c(3.1,4.1,0.5,0.5))
+plot(QQ.out[1:s],type="l", xlim=c(1,max(10,s)), las=1, ylab="Q", lwd=2)
+
+par(mar=c(5,4,1,0.5))
+plot(x[,1], x[,2], col=cc, main=paste("s =",s,"   Q =", round(QQ.out[s],4)), xlab=expression(x[1]), ylab=expression(x[2]))
+for(k in 1:KK){
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.50), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.82), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.95), col="grey", lty=2, lwd=2)
+}
+
+
+
+
+
+```
+ 
+ 
+```{r}
+mu
+```
+ 
+ 
+ 
+```{r}
+mu.true
+```
+ 
+ 
+ 
+```{r}
+v[58,]
+```
+
+
+
+
+#### Example of an MCMC algorithm for fitting a location mixture of 2 Gaussian components
+#### The algorithm is tested using simulated data
+
+```{r}
+## Clear the environment and load required libraries
+rm(list=ls())
+library(MCMCpack)
+set.seed(81196)  # So that results are reproducible
+
+## Generate data from a mixture with 2 components
+KK         = 2
+w.true     = 0.6  # True weights associated with the components
+mu.true    = rep(0, KK)
+mu.true[1] = 0   # True mean for the first component
+mu.true[2] = 5   # True mean for the second component
+sigma.true = 1   # True standard deviation of all components
+n          = 120         # Number of observations to be generated
+cc.true = sample(1:KK, n, replace=T, prob=c(w.true,1-w.true))
+x  = rep(0, n)
+for(i in 1:n){
+  x[i] = rnorm(1, mu.true[cc.true[i]], sigma.true)
+}
+
+# Plot the true density
+par(mfrow=c(1,1))
+xx.true = seq(-8,11,length=200)
+yy.true = w.true*dnorm(xx.true, mu.true[1], sigma.true) + 
+  (1-w.true)*dnorm(xx.true, mu.true[2], sigma.true) 
+plot(xx.true, yy.true, type="l", xlab="x", ylab="True density", lwd=2)
+points(x, rep(0,n), col=cc.true)
+```
+
+
+#Initial guess of the data distribution
+
+```{r}
+## Initialize the parameters
+w     = 1/2                         #Assign equal weight to each component to start with
+mu    = rnorm(KK, mean(x), sd(x))   #Random cluster centers randomly spread over the support of the data
+sigma = sd(x)                       #Initial standard deviation
+
+# Plot the initial guess for the density
+xx = seq(-8,11,length=200)
+yy = w*dnorm(xx, mu[1], sigma) + (1-w)*dnorm(xx, mu[2], sigma)
+plot(xx, yy, type="l", ylim=c(0, max(yy)), xlab="x", 
+     ylab="Initial density", lwd=2)
+points(x, rep(0,n), col=cc.true)
+```
+
+
+```{r}
+## The actual MCMC algorithm starts here
+# Priors
+aa  = rep(1,KK)  # Uniform prior on w
+eta = 0          # Mean 0 for the prior on mu_k
+tau = 5          # Standard deviation 5 on the prior for mu_l
+dd  = 2          # no of degree of freedom for the prior on the variance 
+qq  = 1          #the other parameter for the prior on the variance is going to be 1
+
+# Number of iterations of the sampler
+rrr   = 6000 #no of iteration of the MCMC
+burn  = 1000
+
+
+# Storing the samples
+cc.out    = array(0, dim=c(rrr, n))   #Contains the indicators
+w.out     = rep(0, rrr)               # stores the samples of the weight
+mu.out    = array(0, dim=c(rrr, KK))  # stores the samples of the means of the components
+sigma.out = rep(0, rrr)               # stores the samples of the standard deviation of the components
+logpost   = rep(0, rrr)               # contains the logarithm of the posterior
+
+# MCMC iterations
+for(s in 1:rrr){
+  # Sample the indicators
+  cc = rep(0,n)
+  for(i in 1:n){
+    v = rep(0,KK)
+    v[1] = log(w) + dnorm(x[i], mu[1], sigma, log=TRUE)  #Compute the log of the weights
+    v[2] = log(1-w) + dnorm(x[i], mu[2], sigma, log=TRUE)  #Compute the log of the weights
+    v = exp(v - max(v))/sum(exp(v - max(v)))
+    cc[i] = sample(1:KK, 1, replace=TRUE, prob=v)   #sampling the mixture components
+  }
+  
+  # Sample the weights
+  w = rbeta(1, aa[1] + sum(cc==1), aa[2] + sum(cc==2))
+
+  # Sample the means
+  for(k in 1:KK){
+    nk    = sum(cc==k)
+    xsumk = sum(x[cc==k])
+    tau2.hat = 1/(nk/sigma^2 + 1/tau^2)
+    mu.hat  = tau2.hat*(xsumk/sigma^2 + eta/tau^2)
+    mu[k]   = rnorm(1, mu.hat, sqrt(tau2.hat))
+  }
+
+  # Sample the variances
+  dd.star = dd + n/2
+  qq.star = qq + sum((x - mu[cc])^2)/2
+  sigma = sqrt(rinvgamma(1, dd.star, qq.star))
+
+  # Store samples
+  #Restoring the values we just sampled
+  cc.out[s,]   = cc
+  w.out[s]     = w
+  mu.out[s,]   = mu
+  sigma.out[s] = sigma
+  
+  #computing the normalized posterior for the model
+  for(i in 1:n){
+    if(cc[i]==1){
+      logpost[s] = logpost[s] + log(w) + dnorm(x[i], mu[1], sigma, log=TRUE)
+    }else{
+      logpost[s] = logpost[s] + log(1-w) + dnorm(x[i], mu[2], sigma, log=TRUE)
+    }
+  }
+  logpost[s] = logpost[s] + dbeta(w, aa[1], aa[2],log = T)
+  for(k in 1:KK){
+    logpost[s] = logpost[s] + dnorm(mu[k], eta, tau, log = T)
+  }
+  logpost[s] = logpost[s] + log(dinvgamma(sigma^2, dd, 1/qq))
+  
+  #print out every 500 iteration-what the current iteration is
+  if(s/500==floor(s/500)){
+    print(paste("s =",s))
+  }
+}
+```
+
+
+```{r}
+#to verify convergence
+#plot the log posterior with iteration number
+## Plot the logposterior distribution for various samples
+par(mfrow=c(1,1))
+par(mar=c(4,4,1,1)+0.1)
+plot(logpost, type="l", xlab="Iterations", ylab="Log posterior")
+```
+
+
+```{r}
+## ---- mcmunivariate4
+#plot of the posterior distribution
+xx = seq(-8,11,length=200)
+density.posterior = array(0, dim=c(rrr-burn,length(xx)))
+for(s in 1:(rrr-burn)){
+  density.posterior[s,] = density.posterior[s,] + w.out[s+burn]*dnorm(xx,mu.out[s+burn,1],sigma.out[s+burn]) +
+                                                  (1-w.out[s+burn])*dnorm(xx,mu.out[s+burn,2],sigma.out[s+burn])
+}
+density.posterior.m = apply(density.posterior , 2, mean)
+density.posterior.lq = apply(density.posterior, 2, quantile, 0.025)
+density.posterior.uq = apply(density.posterior, 2, quantile, 0.975)
+par(mfrow=c(1,1))
+par(mar=c(4,4,1,1)+0.1)
+plot(xx, density.posterior.m, type="n",ylim=c(0,max(density.posterior.uq)), xlab="x", ylab="Density")
+polygon(c(xx,rev(xx)), c(density.posterior.lq, rev(density.posterior.uq)), col="grey", border="grey")
+lines(xx, density.posterior.m, lwd=2)
+points(x, rep(0,n), col=cc.true)
+```
+# the black line corresponds to the posterior mean of the density of data
+# the gray area corresponds to critical intervals- point wise credible intervals for that density
+
+
+
+
+#### Example of an MCMC algorithm for fitting a mixtures of K p-variate Gaussian components
+#### The algorithm is tested using simulated data
+
+
+
+```{r}
+## Clear the environment and load required libraries
+rm(list=ls())
+library(mvtnorm)
+library(ellipse)
+library(MCMCpack)
+
+## Generate data from a mixture with 3 components
+#three normals - bivariate normals
+KK      = 3
+p       = 2
+w.true = c(0.5,0.3,0.2)  # True weights associated with the components
+mu.true     = array(0, dim=c(KK,p))
+mu.true[1,] = c(0,0)   #True mean for the first component
+mu.true[2,] = c(5,5)   #True mean for the second component
+mu.true[3,] = c(-3,7)   #True mean for the third component
+Sigma.true      = array(0, dim=c(KK,p,p))
+Sigma.true[1,,] = matrix(c(1,0,0,1),p,p)   #True variance for the first component
+Sigma.true[2,,] = matrix(c(2,0.9,0.9,1),p,p)   #True variance for the second component
+Sigma.true[3,,] = matrix(c(1,-0.9,-0.9,4),p,p)   #True variance for the third component
+set.seed(63252)    #Keep seed the same so that we can reproduce results
+n  = 120
+cc.true = sample(1:3, n, replace=T, prob=w.true)
+x  = array(0, dim=c(n,p))
+for(i in 1:n){
+  x[i,] = rmvnorm(1, mu.true[cc.true[i],], Sigma.true[cc.true[i],,])
+}
+
+par(mfrow=c(1,1))
+plot(x[,1], x[,2], col=cc.true, xlab=expression(x[1]), ylab=expression(x[2]), type="n")
+text(x[,1], x[,2], seq(1,n), col=cc.true, cex=0.6)
+for(k in 1:KK){
+  lines(ellipse(x=Sigma.true[k,,], centre=mu.true[k,], level=0.50), col="grey", lty=2)
+  lines(ellipse(x=Sigma.true[k,,], centre=mu.true[k,], level=0.82), col="grey", lty=2)
+  lines(ellipse(x=Sigma.true[k,,], centre=mu.true[k,], level=0.95), col="grey", lty=2)
+}
+title(main="Data + True Components")
+```
+
+# Initial Guess
+```{r}
+## Initialize the parameters
+w          = rep(1,KK)/KK  #Assign equal weight to each component to start with
+mu         = rmvnorm(KK, apply(x,2,mean), var(x))   #RandomCluster centers randomly spread over the support of the data (rmvnorm means mulitvariate normal distribution)
+Sigma      = array(0, dim=c(KK,p,p))  #Initial variances are assumed to be the same
+Sigma[1,,] = var(x)/KK  
+Sigma[2,,] = var(x)/KK
+Sigma[3,,] = var(x)/KK
+cc         = sample(1:KK, n, replace=TRUE, prob=w)
+
+par(mfrow=c(1,1))
+plot(x[,1], x[,2], col=cc.true, xlab=expression(x[1]), ylab=expression(x[2]))
+for(k in 1:KK){
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.50), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.82), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.95), col="grey", lty=2, lwd=2)
+}
+title(main="Initial estimate + Observations")
+```
+
+
+```{r}
+# Priors
+aa = rep(1, KK)
+dd = apply(x,2,mean)
+DD = 10*var(x)
+nu = p
+SS = var(x)/3
+
+# Number of iteration of the sampler
+rrr = 1000
+
+# Storing the samples
+cc.out    = array(0, dim=c(rrr, n))
+w.out     = array(0, dim=c(rrr, KK))
+mu.out    = array(0, dim=c(rrr, KK, p))
+Sigma.out = array(0, dim=c(rrr, KK, p, p))
+logpost   = rep(0, rrr)
+
+for(s in 1:rrr){
+  # Sample the indicators
+  for(i in 1:n){
+    v = rep(0,KK)
+    for(k in 1:KK){
+      v[k] = log(w[k]) + mvtnorm::dmvnorm(x[i,], mu[k,], Sigma[k,,], log=TRUE)  #Compute the log of the weights
+    }
+    v = exp(v - max(v))/sum(exp(v - max(v)))
+    cc[i] = sample(1:KK, 1, replace=TRUE, prob=v)
+  }
+  
+  # Sample the weights
+  w = as.vector(rdirichlet(1, aa + tabulate(cc)))
+  
+  # Sample the means
+  DD.st = matrix(0, nrow=p, ncol=p)
+  for(k in 1:KK){
+    mk    = sum(cc==k)
+    xsumk = apply(x[cc==k,], 2, sum)
+    DD.st = solve(mk*solve(Sigma[k,,]) + solve(DD))
+    dd.st = DD.st%*%(solve(Sigma[k,,])%*%xsumk + solve(DD)%*%dd)
+    mu[k,] = as.vector(rmvnorm(1,dd.st,DD.st))
+  }
+  
+  # Sample the variances
+  xcensumk = array(0, dim=c(KK,p,p))
+  for(i in 1:n){
+    xcensumk[cc[i],,] = xcensumk[cc[i],,] + (x[i,] - mu[cc[i],])%*%t(x[i,] - mu[cc[i],])
+  }
+  for(k in 1:KK){
+    Sigma[k,,] = riwish(nu + sum(cc==k), SS + xcensumk[k,,])
+  }
+  
+  # Store samples
+  cc.out[s,]      = cc
+  w.out[s,]       = w
+  mu.out[s,,]     = mu
+  Sigma.out[s,,,] = Sigma
+  for(i in 1:n){
+    logpost[s] = logpost[s] + log(w[cc[i]]) + mvtnorm::dmvnorm(x[i,], mu[cc[i],], Sigma[cc[i],,], log=TRUE)
+  }
+  logpost[s] = logpost[s] + ddirichlet(w, aa)
+  for(k in 1:KK){
+    logpost[s] = logpost[s] + mvtnorm::dmvnorm(mu[k,], dd, DD, log=TRUE)
+    logpost[s] = logpost[s] + log(diwish(Sigma[k,,], nu, SS))
+  }
+  
+  if(s/250==floor(s/250)){
+    print(paste("s = ", s))
+  }
+  
+}
+
+## Plot the logposterior distribution for various samples
+par(mfrow=c(1,1))
+par(mar=c(4,4,1,1)+0.1)
+plot(logpost, type="l", xlab="Iterations", ylab="Log posterior")
+
+## Plot the density estimate for the last iteration of the MCMC
+par(mfrow=c(1,1))
+par(mar=c(4,4,2,1)+0.1)
+plot(x[,1], x[,2], col=cc.true, main=paste("s =",s,"   logpost =", round(logpost[s],4)), xlab=expression(x[1]), ylab=expression(x[2]))
+for(k in 1:KK){
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.50), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.82), col="grey", lty=2, lwd=2)
+  lines(ellipse(x=Sigma[k,,], centre=mu[k,], level=0.95), col="grey", lty=2, lwd=2)
+}
+```
+# Application of Mixture Model
+
+1. Density Estimation
+```{r}
+## Using mixture models for density estimation in the galaxies dataset
+## Compare kernel density estimation, and estimates from mixtures of KK=6 
+## components obtained using both frequentist and Bayesian procedures
+```
+
+#aim
+# we want to know if the distribution is multimodal
+# how many modes are presnt
+# provide the density estimator for this different velocities
+
+
+# Load the galaxy dataset
+```{r}
+rm(list=ls())
+
+### Loading data and setting up global variables
+library(MASS)
+library(MCMCpack)
+data(galaxies)
+KK = 6          # Based on the description of the dataset
+x  = galaxies
+n  = length(x)
+set.seed(781209)
+```
+
+
+```{r}
+x
+```
+
+
+#using the EM algorithm to get the maximum likelihood estimator of the parameters of this particular dataset
+# once the maximum likelihood estimators are plugged into the definition of the mixture model, we can obtain what we call the
+# Maximum Likelihood density estimate based on the location of the mixture of models
+
+```{r}
+### First, compute the "Maximum Likelihood" density estimate associated with a location mixture of 6 Gaussian distributions using the EM algorithm
+#Initial Guess
+## Initialize the parameters
+w     = rep(1,KK)/KK
+mu    = rnorm(KK, mean(x), sd(x))
+sigma = sd(x)/KK
+
+
+#initialization of parameters that control the convergence of the algorithm
+epsilon = 0.000001
+s       = 0
+sw      = FALSE
+KL      = -Inf
+KL.out  = NULL
+
+while(!sw){
+  ## E step
+  v = array(0, dim=c(n,KK))
+  for(k in 1:KK){
+    v[,k] = log(w[k]) + dnorm(x, mu[k], sigma,log=TRUE)  
+  }
+  for(i in 1:n){
+    v[i,] = exp(v[i,] - max(v[i,]))/sum(exp(v[i,] - max(v[i,])))
+  }
+  
+  ## M step
+  # Weights
+  w = apply(v,2,mean)
+  mu = rep(0, KK)
+  for(k in 1:KK){
+    for(i in 1:n){
+      mu[k]    = mu[k] + v[i,k]*x[i]
+    }
+    mu[k] = mu[k]/sum(v[,k])
+  }
+  # Standard deviations
+  sigma = 0
+  for(i in 1:n){
+    for(k in 1:KK){
+      sigma = sigma + v[i,k]*(x[i] - mu[k])^2
+    }
+  }
+  sigma = sqrt(sigma/sum(v))
+  
+  ##Check convergence
+  KLn = 0
+  for(i in 1:n){
+    for(k in 1:KK){
+      KLn = KLn + v[i,k]*(log(w[k]) + dnorm(x[i], mu[k], sigma, log=TRUE))
+    }
+  }
+  if(abs(KLn-KL)/abs(KLn)<epsilon){
+    sw=TRUE
+  }
+  KL = KLn
+  KL.out = c(KL.out, KL)
+  s = s + 1
+  print(paste(s, KLn))
+}
+xx  = seq(5000,37000,length=300)
+nxx = length(xx)
+density.EM = rep(0, nxx)
+for(s in 1:nxx){
+  for(k in 1:KK){
+    density.EM[s] = density.EM[s] + w[k]*dnorm(xx[s], mu[k], sigma)
+  }
+}
+```
+
+
+```{r}
+### Get a "Bayesian" kernel density estimator based on the same location mixture of 6 normals
+## Priors set up using an "empirical Bayes" approach
+aa  = rep(1,KK)  
+eta = mean(x)    
+tau = sqrt(var(x))
+dd  = 2
+qq  = var(x)/KK
+
+## Initialize the parameters
+w     = rep(1,KK)/KK
+mu    = rnorm(KK, mean(x), sd(x))
+sigma = sd(x)/KK
+cc    = sample(1:KK, n, replace=T, prob=w)
+
+## Number of iterations of the sampler
+rrr   = 12000
+burn  = 2000
+
+## Storing the samples
+cc.out    = array(0, dim=c(rrr, n))
+w.out     = array(0, dim=c(rrr, KK))
+mu.out    = array(0, dim=c(rrr, KK))
+sigma.out = rep(0, rrr)
+logpost   = rep(0, rrr)
+
+
+for(s in 1:rrr){
+  # Sample the indicators
+  for(i in 1:n){
+    v = rep(0,KK)
+    for(k in 1:KK){
+      v[k] = log(w[k]) + dnorm(x[i], mu[k], sigma, log=TRUE)  #Compute the log of the weights
+    }
+    v = exp(v - max(v))/sum(exp(v - max(v)))
+    cc[i] = sample(1:KK, 1, replace=TRUE, prob=v)
+  }
+  
+  # Sample the weights
+  w = as.vector(rdirichlet(1, aa + tabulate(cc, nbins=KK)))
+  
+  # Sample the means
+  for(k in 1:KK){
+    nk    = sum(cc==k)
+    xsumk = sum(x[cc==k])
+    tau2.hat = 1/(nk/sigma^2 + 1/tau^2)
+    mu.hat  = tau2.hat*(xsumk/sigma^2 + eta/tau^2)
+    mu[k]   = rnorm(1, mu.hat, sqrt(tau2.hat))
+  }
+  
+  # Sample the variances
+  dd.star = dd + n/2
+  qq.star = qq + sum((x - mu[cc])^2)/2
+  sigma = sqrt(1/rgamma(1, dd.star, qq.star))
+  
+  # Store samples
+  cc.out[s,]   = cc
+  w.out[s,]    = w
+  mu.out[s,]   = mu
+  sigma.out[s] = sigma
+  for(i in 1:n){
+    logpost[s] = logpost[s] + log(w[cc[i]]) + dnorm(x[i], mu[cc[i]], sigma, log=TRUE)
+  }
+  logpost[s] = logpost[s] + log(ddirichlet(w, aa))
+  for(k in 1:KK){
+    logpost[s] = logpost[s] + dnorm(mu[k], eta, tau, log=TRUE)
+  }
+  logpost[s] = logpost[s] + dgamma(1/sigma^2, dd, qq, log=TRUE) - 4*log(sigma)
+  if(s/500==floor(s/500)){
+    print(paste("s =",s))
+  }
+}
+
+## Compute the samples of the density over a dense grid
+density.mcmc = array(0, dim=c(rrr-burn,length(xx)))
+for(s in 1:(rrr-burn)){
+    for(k in 1:KK){
+        density.mcmc[s,] = density.mcmc[s,] + w.out[s+burn,k]*dnorm(xx,mu.out[s+burn,k],sigma.out[s+burn])
+    }
+}
+density.mcmc.m = apply(density.mcmc , 2, mean)
+```
+
+
+```{r}
+## Plot Bayesian estimate with pointwise credible bands along with kernel density estimate and frequentist point estimate
+colscale = c("black", "blue", "red")
+yy = density(x)
+density.mcmc.lq = apply(density.mcmc, 2, quantile, 0.025)
+density.mcmc.uq = apply(density.mcmc, 2, quantile, 0.975)
+plot(xx, density.mcmc.m, type="n",ylim=c(0,max(density.mcmc.uq)),xlab="Velocity", ylab="Density")
+polygon(c(xx,rev(xx)), c(density.mcmc.lq, rev(density.mcmc.uq)), col="grey", border="grey")
+lines(xx, density.mcmc.m, col=colscale[1], lwd=2)
+lines(xx, density.EM, col=colscale[2], lty=2, lwd=2)
+lines(yy, col=colscale[3], lty=3, lwd=2)
+points(x, rep(0,n))
+legend(27000, 0.00017, c("KDE","EM","MCMC"), col=colscale[c(3,2,1)], lty=c(3,2,1), lwd=2, bty="n")
+
+```
+
+# Clustering
+```{r}
+## Using mixture models for clustering in the iris dataset
+## Compare k-means clustering and a location and scale mixture model with K normals
+
+### Loading data and setting up global variables
+rm(list=ls())
+library(mclust)
+library(mvtnorm)
+
+### Defining a custom function to create pair plots
+### This is an alternative to the R function pairs() that allows for 
+### more flexibility. In particular, it allows us to use text to label 
+### the points
+pairs2 = function(x, col="black", pch=16, labels=NULL, names = colnames(x)){
+  n = dim(x)[1]
+  p = dim(x)[2]
+  par(mfrow=c(p,p))
+  for(k in 1:p){
+    for(l in 1:p){
+      if(k!=l){
+        par(mar=c(3,3,1,1)+0.1)
+        plot(x[,k], x[,l], type="n", xlab="", ylab="")
+        if(is.null(labels)){
+          points(x[,k], x[,l], pch=pch, col=col)
+        }else{
+          text(x[,k], x[,l], labels=labels, col=col)
+        }
+      }else{
+        plot(seq(0,5), seq(0,5), type="n", xlab="", ylab="", axes=FALSE)
+        text(2.5,2.5,names[k], cex=1.2)
+      }
+    }
+  }
+}
+
+## Setup data
+data(iris)
+x       = as.matrix(iris[,-5])
+n       = dim(x)[1]
+p       = dim(x)[2]       # Number of features
+KK      = 3
+epsilon = 0.0000001
+par(mfrow=c(1,1))
+par(mar=c(4,4,1,1))
+colscale = c("black","blue","red")
+shortnam  = c("s","c","g")
+pairs2(x, col=colscale[iris[,5]], labels=shortnam[as.numeric(iris[,5])])
+```
+
+
+
+
+```{r}
+# Initialize the parameters of the algorithm
+set.seed(63252)
+numruns = 15
+v.sum   = array(0, dim=c(numruns, n, KK))
+QQ.sum  = rep(0, numruns)
+
+for(ss in 1:numruns){
+  w   = rep(1,KK)/KK  #Assign equal weight to each component to start with
+  mu  = rmvnorm(KK, apply(x,2,mean), 3*var(x))   #Cluster centers randomly spread over the support of the data
+  Sigma      = array(0, dim=c(KK,p,p))  #Initial variances are assumed to be the same
+  Sigma[1,,] = var(x)
+  Sigma[2,,] = var(x)
+  Sigma[3,,] = var(x)
+  
+  sw     = FALSE
+  QQ     = -Inf
+  QQ.out = NULL
+  s      = 0
+  
+  while(!sw){
+    ## E step
+    v = array(0, dim=c(n,KK))
+    for(k in 1:KK){  #Compute the log of the weights
+      v[,k] = log(w[k]) + mvtnorm::dmvnorm(x, mu[k,], Sigma[k,,], log=TRUE) 
+    }
+    for(i in 1:n){
+      v[i,] = exp(v[i,] - max(v[i,]))/sum(exp(v[i,] - max(v[i,])))  #Go from logs to actual weights in a numerically stable manner
+    }
+    
+    ## M step
+    w = apply(v,2,mean)
+    mu = matrix(0, nrow=KK, ncol=p)
+    for(k in 1:KK){
+      for(i in 1:n){
+        mu[k,]    = mu[k,] + v[i,k]*x[i,]
+      }
+      mu[k,] = mu[k,]/sum(v[,k])
+    }
+    Sigma = array(0,dim=c(KK, p, p))
+    for(k in 1:KK){
+      for(i in 1:n){
+        Sigma[k,,] = Sigma[k,,] + v[i,k]*(x[i,] - mu[k,])%*%t(x[i,] - mu[k,])
+      }
+      Sigma[k,,] = Sigma[k,,]/sum(v[,k])
+    }
+    
+    ##Check convergence
+    QQn = 0
+    for(i in 1:n){
+      for(k in 1:KK){
+        QQn = QQn + v[i,k]*(log(w[k]) + mvtnorm::dmvnorm(x[i,],mu[k,],Sigma[k,,],log=TRUE))
+      }
+    }
+    if(abs(QQn-QQ)/abs(QQn)<epsilon){
+      sw=TRUE
+    }
+    QQ = QQn
+    QQ.out = c(QQ.out, QQ)
+    s = s + 1
+  }
+  
+  v.sum[ss,,] = v
+  QQ.sum[ss]  = QQ.out[s]
+  print(paste("ss =", ss))
+}
+```
+
+
+
+
+
+```{r}
+## Cluster reconstruction under the mixture model
+cc = apply(v.sum[which.max(QQ.sum),,], 1 ,which.max)
+colscale = c("black","blue","red")
+pairs2(x, col=colscale[cc], labels=cc)
+```
+
+# Rand Index
+```{r}
+ARImle = adjustedRandIndex(cc, as.numeric(iris[,5]))  # Higher values indicate larger agreement
+ARImle
+```
+
+
+```{r}
+## Cluster reconstruction under the K-means algorithm
+irisCluster <- kmeans(x, 3, nstart = numruns)
+colscale = c("black","blue","red")
+pairs2(x, col=colscale[irisCluster$cluster], labels=irisCluster$cluster)
+```
+
+
+```{r}
+ARIkmeans = adjustedRandIndex(irisCluster$cluster, as.numeric(iris[,5]))
+ARIkmeans
+```
+

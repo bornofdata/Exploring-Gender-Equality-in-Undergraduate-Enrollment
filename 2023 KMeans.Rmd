@@ -1,0 +1,208 @@
+---
+title: "2023 KMeans"
+author: "Kehinde Fagbamigbe"
+date: "2023-01-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+#function to calculate euclidean distance
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist) #returns euclidean distance between two points or two vectors
+}
+
+test = function(x, k){
+
+random_center_index <- sample(1:nrow(x), size = k, replace = TRUE) #radomnly selects a row of a specified size as intial center
+cluster_diff <- array(NA, dim = c(1,k)) #create a dummy array of 1 row and specified k column. This will hold the distances calculated amongst all the clusters
+df <- data.frame(matrix(ncol = ncol(x), nrow = 0)) #creating a dummy dataframe of no row and same no of column as the original data
+
+colnames(df) <- colnames(x) #renaming the column of the created dataframe with data's column name
+clusters <- rep(list(df), k) #duplicating the created dataframe in the specified cluster amount
+
+
+# Initialize empty clusters and old centroids
+old_clusters <- rep(NA, nrow(x))
+old_centroids <- matrix(NA, nrow = k, ncol = ncol(x))
+
+while (TRUE) {
+for (j in 1:nrow(x)) { #for each of the rows in the data
+  for (h in 1:k) { #for each of the specified cluster
+  cluster_diff[h] <- eucl.dist( x[j,] , x[random_center_index[h],] ) #calculate the euclidean distance between each observation and the randomly selected centres
+
+
+  }
+  
+  index_of_min_centre <- which.min(cluster_diff) #find the index of the smallest euclidean distance across all the clusters
+  clusters[[index_of_min_centre]] <- rbind(clusters[[index_of_min_centre]], x[j,] ) #adding to the row where the cluster belongs based on euclidean distance
+}
+
+# Check if the clusters have changed
+if (identical(old_clusters, clusters)) {
+  break
+}
+
+# Check for empty clusters
+empty_clusters <- which(sapply(clusters, nrow) == 0)
+
+if(length(empty_clusters) > 0) {
+  # Select new random centroid for empty cluster
+  random_center_index[empty_clusters] <- sample(1:nrow(x), size = length(empty_clusters), replace = TRUE)
+  clusters[[empty_clusters]] <- df
+}
+
+old_clusters <- clusters
+random_center_index <- sapply(clusters, function(x) x[sample(nrow(x), 1), ])
+
+
+# Check for infinite loop
+if (identical(old_centroids, random_center_index)) {
+  break
+}
+old_centroids <- random_center_index
+
+
+}
+
+cluster_centres <- sapply(clusters, function(x) colMeans(x))
+covariance <- sapply(clusters, function(x) cov(x))
+
+return (list(clusters = clusters, mean = cluster_centres, cov_matrix = covariance ))
+}
+  
+  
+  
+
+```
+
+
+
+
+```{r}
+source("/Users/alhajidot/Documents/BGSU/Project/EMScript.R")
+```
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+```{r}
+trial = test(x, 2)
+trial
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#function to calculate euclidean distance
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist) #returns euclidean distance between two points or two vectors
+  
+}
+
+test = function(x, k){
+  
+  random_center_index <- sample(1:nrow(x), size = k) #radomnly selects a row of a specified size as intial center
+  cluster_diff <- array(NA, dim = c(1,k)) #create a dummy array of 1 row and specified k column. This will hold the distances calculated amongst all the clusters
+  df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0))  #creating a dummy dataframe of no row and same no of column as the original data
+  
+  colnames(df) <- colnames(x) #renaming the column of the created dataframe with data's column name
+  clusters <- rep(list(df), k) #duplicating the created dataframe in the specified cluster amount
+  
+  
+  # Initialize empty clusters and old centroids
+  old_clusters <- rep(NA, nrow(x))
+  old_centroids <- matrix(NA, nrow = k, ncol = ncol(x))
+  
+  while (TRUE) {
+    for (j in 1:nrow(x)) { #for each of the rows in the data
+      for (h in 1:k) { #for each of the specified cluster
+        cluster_diff[h] <- eucl.dist( x[j,] , x[random_center_index[h],] ) #calculate the euclidean distance between each observation and  the randonly selected centres
+      
+      }
+      index_of_min_centre <- which.min(cluster_diff) #find the index of the smallest euclidean distance across all the clusters
+      clusters[[index_of_min_centre]] <- rbind(clusters[[index_of_min_centre]], x[j,] ) #adding to the row where the cluster belongs based on euclidean distance
+    }
+    
+    # # Check if the clusters have changed
+    # if (all(old_clusters == clusters)) {
+    #   break
+    # }
+    # 
+    # Check if the clusters have changed
+    if (identical(old_clusters, clusters)) {
+      break
+    }
+
+    
+    # Check for empty clusters
+    empty_clusters <- which(sapply(clusters, nrow) == 0)
+    
+    if(length(empty_clusters) > 0) {
+      # Select new random centroid for empty cluster
+      random_center_index[empty_clusters] <- sample(1:nrow(x), size = length(empty_clusters))
+      clusters[[empty_clusters]] <- df
+    }
+    
+    old_clusters <- clusters
+    random_center_index <- sapply(clusters, function(x) x[[sample(nrow(x), 1)], ])
+
+
+    # Check for infinite loop
+    if (identical(old_centroids, random_center_index)) {
+      break
+    }
+    old_centroids <- random_center_index
+  }
+  
+  cluster_centres <- sapply(clusters, function(x) colMeans(x))
+  covariance <- sapply(clusters, function(x) cov(x))
+  
+  return (list(clusters = clusters, mean = cluster_centres, cov_matrix = covariance ))
+}
+
+```
+
+
+
+```{r}
+source("/Users/alhajidot/Documents/BGSU/Project/EMScript.R")
+```
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+```{r}
+trial = test(x, 2)
+trial
+```
+
+

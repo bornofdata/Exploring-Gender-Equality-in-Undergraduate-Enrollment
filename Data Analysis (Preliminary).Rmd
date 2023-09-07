@@ -1,0 +1,91 @@
+---
+title: "Data Analysis (Preliminary)"
+author: "Kehinde Fagbamigbe"
+date: "2023-01-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+load("/Users/alhajidot/Documents/BGSU/Project/Y/Model Based Clustering.Rdata")
+```
+
+```{r}
+#Y.complete
+```
+
+```{r}
+Y
+```
+
+
+```{r}
+data <- Y[Y.complete]
+data
+```
+
+```{r}
+paste("i is ", i)
+paste("j is ", j)
+paste("k is ", k)
+paste("t is ", t)
+```
+
+
+```{r}
+dim(data)
+```
+
+
+```{r}
+Y[3,1,j,k,t]
+```
+
+
+
+```{r}
+Y[3,2,j,k,t]
+```
+
+```{r}
+dim(Y)
+```
+
+```{r}
+class(data)
+```
+
+```{r}
+data[3,j,k,t]
+```
+
+
+
+```{r}
+Y[i,1,j,k,t] <- Female[i,j,k,t]
+```
+
+
+
+
+
+```{r}
+dim(data)
+```
+
+```{r}
+Female
+```
+
+
+```{r}
+Y.complete <- complete.cases(Y)
+Y.complete
+```
+
+
+

@@ -1,0 +1,310 @@
+---
+title: "EM for Univariate Gaussian Mixture"
+author: "Kehinde Fagbamigbe"
+date: '2022-08-17'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Expectation-Maximization Algorithm (Mixture of Univariate Gaussian)
+# E-Step
+
+```{r}
+x1 = c(-3.28,-1.4,-1.57,-2.02,0.95,2.24,3.02,2.00,2.91,4.43)
+x1
+```
+
+
+```{r}
+class(x1)
+```
+
+
+```{r}
+#initial guess
+
+mu_init = c(-2,2,5) #the initial mean of the three normal/gaussian distributions
+tau_init = c(0.2,0.5,0.3) # Mixing proportion/weight of the mixtures must always add up to 1, a restriction that must be enforced
+sigma_init = c(1.2,0.5,2) #the initial variance of the three normal/gaussian distributions
+```
+
+
+
+```{r}
+E.step <- function(x, tau, Mu, S2){  #tau is mixture proportion, Mu is mean S2 is standard deviation
+ K <- length(tau)
+ # cat("K", K, "\n")
+ # cat("Tau", tau, "\n")
+ n <- length(x)
+ Pi <- matrix(NA, n, K)
+ for (i in 1:n){
+  for (k in 1:K){
+   Pi[i,k] <- tau[k] * dnorm(x[i], Mu[k], sqrt(S2[k]))  #dnorm means normal distribution
+   # cat("pi", i, k, Pi[i,k], "\n")
+  } 
+  Pi[i,] <- Pi[i,] /sum(Pi[i,])
+ }
+return((Pi))
+}
+```
+
+
+
+```{r}
+E.step(x1,tau_init,mu_init,sigma_init)
+```
+
+```{r}
+Pi = E.step(x1,tau_init,mu_init,sigma_init)
+Pi
+```
+
+```{r}
+class(Pi)
+```
+
+
+```{r}
+dim(Pi)
+```
+
+
+```{r}
+dim(Pi)[2]
+```
+
+# Maximization Step
+# M-Step
+```{r}
+M.step <- function(x, Pi){
+
+ K <- dim(Pi)[2]
+ n <- dim(Pi)[1]
+ 
+ Sum.Pi <- apply(Pi, 2, sum) #2 means column summation 1 means sum by rows
+ # cat("Sum.Pi", Sum.Pi, "\n")
+
+ tau <- Sum.Pi / n
+
+ Mu <- rep(0, K) #repeat 0 in K number of time
+ S2 <- rep(0, K)
+
+ for (k in 1:K){
+ 
+  for (i in 1:n){
+   Mu[k] <- Mu[k] + Pi[i,k] * x[i] #is the Mu needed here since it is zero?  #calculating the new mean
+  }
+  Mu[k] <- Mu[k] / Sum.Pi[k]
+
+  for (i in 1:n){   
+   S2[k] <- S2[k] + Pi[i,k] * (x[i] - Mu[k])^2 #the S2 is needed because we are adding new to preious for each k and for all observation
+  }
+  S2[k] <- S2[k] / Sum.Pi[k]
+
+ }
+
+ return(list(tau = tau, Mu = Mu, S2 = S2))
+
+}
+```
+
+
+```{r}
+M.step(x1,Pi)
+```
+
+```{r}
+class(M.step(x1,Pi))
+```
+
+
+```{r}
+new_element <- M.step(x1,Pi)
+```
+
+```{r}
+new_element$tau
+```
+
+
+
+
+# Log Likelihood
+```{r}
+logL <- function(x, tau, Mu, S2){
+
+ n <- length(x)
+ K <- length(tau)
+
+ ll <- 0
+
+ for (i in 1:n){
+
+  ll2 <- 0
+
+  for (k in 1:K){
+   ll2 <- ll2 + tau[k] * dnorm(x[i], Mu[k], sqrt(S2[k])) 
+  }
+
+  ll <- ll + log(ll2)
+
+ }
+
+ return(ll)
+
+}
+```
+
+
+```{r}
+logL(x1, new_element$tau, new_element$Mu, new_element$S2)
+```
+
+
+```{r}
+EM <- function(x, tau, Mu, S2, eps){
+
+ n <- length(x)
+ K <- length(tau)
+ 
+ b <- 0
+
+ ll.old <- -Inf
+ cat("ll.old", ll.old, "\n")
+ ll <- logL(x, tau, Mu, S2)
+
+ # cat("Iteration", b, "logL =", ll, "\n")
+ 
+ repeat{
+
+  b <- b + 1
+
+  if ((ll - ll.old) / abs(ll) < eps) break
+
+  ll.old <- ll
+
+  Pi <- E.step(x, tau, Mu, S2)
+
+  M <- M.step(x, Pi)
+  tau <- M$tau
+  Mu <- M$Mu
+  S2 <- M$S2
+
+  ll <- logL(x, tau, Mu, S2)
+
+  # cat("Iteration", b, "logL =", ll, "\n")
+
+ }
+
+ id <- apply(Pi, 1, which.max) #choose the maximmum row value Q. Is there a reason we want the maximum row value?
+
+ M <- 3 * K - 1
+ BIC <- -2 * ll + M * log(n) #calculation of Bayesian Information Criterion
+ AIC <- -2 * ll + M * 2 #Calculation for Akaike Information Criterion
+
+ return(list(tau = tau, Mu = Mu, S2 = S2, Pi = Pi, id = id,
+  logL = ll, BIC = BIC, AIC = AIC))
+
+}
+```
+
+
+
+# Test
+```{r}
+tau <- c(0.2, 0.5, 0.3)
+Mu <- c(-2, 2, 5)
+S2 <- c(1, 0.5, 2)
+
+K <- length(tau)
+n <- 1000
+
+nk <- rmultinom(1, n, tau)  #rmultinom means multinomial distribution
+
+x <- NULL
+for (k in 1:K){
+ x <- c(x, rnorm(nk[k], Mu[k], sqrt(S2[k]))) #rnorm means Normal Distribution
+}
+```
+
+
+
+```{r}
+hist(x, freq = FALSE)
+tau.0 <- rep(1/3, 3)
+Mu.0 <- c(-1, 0, 1)
+S2.0 <- c(1, 1, 1)
+
+A <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+
+t <- seq(-5, 10, by = 0.01)
+
+d <- rep(0, length(t))
+for (k in 1:K){
+ d <- d + A$tau[k] * dnorm(t, A$Mu[k], sqrt(A$S2[k]))
+}
+
+points(t, d, type = "l")
+
+
+# K = 2 When mixture component is 2
+
+tau.0 <- rep(1/2, 2)
+Mu.0 <- c(-2, 1)
+S2.0 <- c(1, 1)
+
+A2 <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+A2$logL
+A2$BIC
+
+# K = 3 When mixture component is 3
+
+tau.0 <- rep(1/3, 3)
+Mu.0 <- c(-1, 0, 1)
+S2.0 <- c(1, 1, 1)
+
+A3 <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+A3$logL
+A3$BIC
+
+# K = 4 When mixture component is 4
+
+tau.0 <- rep(1/4, 4)
+Mu.0 <- c(-2, -1, 0, 1)
+S2.0 <- c(1, 1, 1, 1)
+
+A4 <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+A4$logL
+A4$BIC
+
+
+# K = 5 When mixture component is 5
+
+tau.0 <- rep(1/5, 5)
+Mu.0 <- c(-2, -1, 0, 1, 2)
+S2.0 <- c(1, 1, 1, 1, 1)
+
+A5 <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+A5$logL
+A5$BIC
+
+```
+
+```{r}
+x1 = c(-3.28,-1.4,-1.57,-2.02,0.95,2.24,3.02,2.00,2.91,4.43)
+
+tau_init = c(0.2,0.5,0.3) #must always add up to 1
+mu_init = c(-2,2,5) #the mean of the two normal/gaussian distributions
+sigma_init = c(1.2,0.5,2) 
+
+
+Univariate_Gaussian_mixture <- EM(x, tau = tau_init, Mu = mu_init, S2 = sigma_init, eps = 1e-8)
+Univariate_Gaussian_mixture$logL
+Univariate_Gaussian_mixture$BIC
+```
+
+

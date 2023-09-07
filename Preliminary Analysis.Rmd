@@ -1,0 +1,678 @@
+---
+title: "Preliminary Analysis"
+author: "Kehinde Fagbamigbe"
+date: "2023-01-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+data <- read.csv("~/Documents/BGSU/Project/hd2019.csv")
+head(data)
+```
+```{r}
+tail(data)
+```
+
+
+```{r}
+colnames(data)
+```
+
+UNITID where data is found for merged schools.
+INSTNM - Institution (entity) name
+IALIAS - Institution name alias
+- ADDR - Institution (entity) street address or post office box
+- CITY
+- STABBR - State Abbreviation
+- ZIP -
+- FIPS -	Frequency	Percentage State Code
+
+Value	Label	Frequency	Percentage
+1	Alabama		
+2	Alaska		
+4	Arizona		
+5	Arkansas		
+6	California		
+8	Colorado		
+9	Connecticut		
+10	Delaware		
+11	District of Columbia		
+12	Florida		
+13	Georgia		
+15	Hawaii		
+16	Idaho		
+17	Illinois		
+18	Indiana		
+19	Iowa		
+20	Kansas		
+21	Kentucky		
+22	Louisiana		
+23	Maine		
+24	Maryland		
+25	Massachusetts		
+26	Michigan		
+27	Minnesota		
+28	Mississippi		
+29	Missouri		
+30	Montana		
+31	Nebraska		
+32	Nevada		
+33	New Hampshire		
+34	New Jersey		
+35	New Mexico		
+36	New York		
+37	North Carolina		
+38	North Dakota		
+39	Ohio		
+40	Oklahoma		
+41	Oregon		
+42	Pennsylvania		
+44	Rhode Island		
+45	South Carolina		
+46	South Dakota		
+47	Tennessee		
+48	Texas		
+49	Utah		
+50	Vermont		
+51	Virginia		
+53	Washington		
+54	West Virginia		
+55	Wisconsin		
+56	Wyoming		
+60	American Samoa		
+64	Federated States of Micronesia		
+66	Guam		
+68	Marshall Islands		
+69	Northern Marianas		
+70	Palau		
+72	Puerto Rico		
+78	Virgin Islands
+
+
+- OBEREG - Bureau of Economic Analysis (BEA) Regions
+BEA Regions are a set of Geographic Areas that are aggregations of the states. The regional classifications, which were developed in the mid-1950s, are based on the homogeneity of the states in terms of economic characteristics, such as the industrial composition of the labor force, and in terms of demographic, social, and cultural characteristics. BEA groups all 50 states and the District of Columbia into eight distinct regions for purposes of data collecting and analyses. IPEDS/HEGIS assigns U.S. service schools as their own region.
+
+0 - US Service schools
+1 - New England CT ME MA NH RI VT
+2 - Mid East DE DC MD NJ NY PA
+3 - Great Lakes IL IN MI OH WI
+4 - Plains IA KS MN MO NE ND SD
+5 - Southeast AL AR FL GA KY LA MS NC SC TN VA WV
+6 - Southwest AZ NM OK TX
+7 - Rocky Mountains CO ID MT UT WY
+8 - Far West AK CA HI NV OR WA
+9 - Outlying areas AS FM GU MH MP PR PW VI
+-3 - Not available
+
+- CHFNM - Name of chief administrator of institution
+
+-1 - Not reported
+-2 - Not applicable
+-9 - not active
+
+- CHFTITLE
+Title of chief administrator of institution
+-1 - Not reported
+-2 - Not applicable
+-9 - not active
+
+- GENTELE 
+General information telephone number
+-1 - Not reported
+-2 - Not applicable
+-9 - not active
+
+
+- EIN - Employer Identification Number
+The number assigned to an institution by the Internal Revenue Service for tax purposes.
+
+- DUNS 
+The Data Universal Numbering System (DUNS), is a proprietary system developed and regulated by Dun & Bradstreet (D&B) that assigns a unique numeric identifier, referred to as a "DUNS number" to a single business entity. It was introduced in 1963 to support D&B's credit reporting practice. The DUNS number is a 9-digit numeric. Some institutions have multiple DUNS numbers. Multiple DUNS numbers are separated by the vertical bar.
+
+
+- OPEID  
+Identification number used by the U.S. Department of Education's Office of Postsecondary Education (OPE) to identify schools that have Program Participation Agreements (PPA) so that its students are eligible to participate in Federal Student Financial Assistance programs under Title IV regulations. This is a 6-digit number followed by a 2-digit suffix used to identify branches, additional locations, and other entities that are part of the eligible institution.
+
+
+- OPEFLAG
+
+Code indicating the institution's degree of eligibility for Title IV aid.
+
+1	Participates in Title IV federal financial aid programs		
+2	Branch campus of a main campus that participates in Title IV		
+3	Deferment only - limited participation		
+4	New participants (became eligible during winter collection)		
+8	New participants (became eligible during spring collection)		
+5	Not currently participating in Title IV, has an OPE ID number		
+6	Not currently participating in Title IV, does not have OPE ID number		
+7	Stopped participating during the survey year		
+
+
+- WEBADDR
+Institution's internet website address
+
+
+- ADMINURL
+Admissions office web (URL) address
+
+
+- FAIDURL
+Financial aid office web (URL) address
+
+- APPLURL
+Web address (URL) on online applciation
+
+
+- NPRICURL
+Net Price Calculator Web Address for institutions that enroll full-time, first-time undergraduate students
+
+- VETURL
+Veterans and Military Servicemembers tuition policies web address
+
+Does your institution post tuition policies specifically related to Veterans and Military Servicemembers on a website? Provide URL
+
+- ATHURL
+Student-Right-to-Know student athlete graduation rate website URL
+
+
+- DISAURL
+Disability Services Web Address
+
+
+- SECTOR
+Sector of institution
+
+Value	Label	Frequency	Percentage
+0	Administrative Unit		
+1	Public, 4-year or above		
+2	Private not-for-profit, 4-year or above		
+3	Private for-profit, 4-year or above		
+4	Public, 2-year		
+5	Private not-for-profit, 2-year		
+6	Private for-profit, 2-year		
+7	Public, less-than 2-year		
+8	Private not-for-profit, less-than 2-year		
+9	Private for-profit, less-than 2-year		
+99	Sector unknown (not active)		
+
+One of nine institutional categories resulting from dividing the universe according to control and level. Control categories are public, private not-for-profit, and private for-profit. Level categories are 4-year and higher (4 year), 2-but-less-than 4-year (2 year), and less than 2-year. For example: public, 4-year institutions.
+
+Control - A classification of whether an institution is operated by publicly elected or appointed officials (public control) or by privately elected or appointed officials and derives its major source of funds from private sources (private control).
+
+Level - A classification of whether an institution’s programs are 4-year or higher (4 year), 2-but-less-than 4-year (2 year), or less than 2-year.
+
+
+- ICLEVEL
+A classification of whether an institution’s programs are 4-year or higher (4 year), 2-but-less-than 4-year (2 year), or less than 2-year.
+
+1	Four or more years		
+2	At least 2 but less than 4 years		
+3	Less than 2 years (below associate)		
+-3	{Not available}		
+
+
+
+- CONTROL
+
+A classification of whether an institution is operated by publicly elected or appointed officials or by privately elected or appointed officials and derives its major source of funds from private sources.
+
+Public institution - An educational institution whose programs and activities are operated by publicly elected or appointed school officials and which is supported primarily by public funds.
+
+Private not-for-profit institution - A private institution in which the individual(s) or agency in control receives no compensation, other than wages, rent, or other expenses for the assumption of risk. These include both independent not-for-profit schools and those affiliated with a religious organization.
+
+Private for-profit institution - A private institution in which the individual(s) or agency in control receives compensation other than wages, rent, or other expenses for the assumption of risk.
+
+1	Public		
+2	Private not-for-profit		
+3	Private for-profit		
+-3	{Not available}
+
+
+
+
+- HLOFFER
+Highest level of offering
+
+0 Other
+1	Award of less than one academic year		
+2	At least 1, but less than 2 academic yrs		
+3	Associate's degree		
+4	At least 2, but less than 4 academic yrs		
+5	Bachelor's degree		
+6	Postbaccalaureate certificate		
+7	Master's degree		
+8	Post-master's certificate		
+9	Doctor's degree		
+-2	Not applicable, first-professional only		
+-3	{Not available}
+
+
+- UGOFFER
+
+A code indicating whether the institution offers undergraduate degrees or certificates.
+	
+Undergraduate offering
+Note: The listed values are based on the whole IPEDS universe and don't represent your group.
+Value	Label	Frequency	Percentage
+1	Undergraduate degree or certificate offering		
+2	No undergraduate offering		
+-3	{Not available}
+
+
+- GROFFER
+A code indicating whether the institution offers graduate degrees or certificates.
+
+Graduate degrees or certificates include master^s and doctor's degrees and postbaccalaureate and post-master's certificates
+
+Graduate offering
+Note: The listed values are based on the whole IPEDS universe and don't represent your group.
+Value	Label	Frequency	Percentage
+1	Graduate degree or certificate offering		
+2	No graduate offering		
+-3	{Not available}
+
+
+
+- HDEGOFR1
+
+A code for highest degree offered at the institution - This variable was revised in 2009 because the first professional category is no longer an award level and the Doctoral award level category has expanded to 3 categories, Doctor's degree - Research/scholarships, Doctor's degree - professional practice and Doctor's degree-other.
+
+This variable is derived from the level of offering variables (LEVEL1-LEVEL8 LEVEL12 and LEVEL17-LEVEL19) from the Institutional Characteristics component as follows:
+
+IF LEVEL17=1 and LEVEL18=1 then HDEGOFR1=11
+else if LEVEL17=1 and LEVEL18 ne 1 then HDEGOFR1=12
+else if LEVEL17 ne 1 and LEVEL18=1 then HDEGOFR1=13
+else if LEVEL17 ne 1 and LEVEL18 ne 1 and LEVEL19=1 then HDEGOFR1=14
+else if LEVEL7=1 HDEGOFR1=20
+else if LEVEL5=1 HDEGOFR1=30
+else if LEVEL3=1 HDEGOFR1=40
+else if LEVEL1=1 or LEVEL2=1 or LEVEL4=1 or LEVEL6=1 or LEVEL8=1
+or LEVEL12=1 then HDEGOFR1=0
+else HDEGOFR1=-3;
+For more information see descriptions of LEVEL1-LEVEL12
+
+11	Doctor's degree - research/scholarship and professional practice		
+12	Doctor's degree - research/scholarship		
+13	Doctor's degree - professional practice		
+14	Doctor's degree - other		
+20	Master's degree		
+30	Bachelor's degree		
+40	Associate's degree		
+0	Non-degree granting		
+-3	{Not available}
+
+
+
+- DEGGRANT
+A code indicating the degree-granting status of the institution.
+
+Degree-granting institutions offer an associate's, bachelor's, master's, doctor's or a first-professional degree.
+
+Nondegree-granting offers certificates or other formal awards.
+
+	
+Degree-granting status
+Note: The listed values are based on the whole IPEDS universe and don't represent your group.
+Value	Label	Frequency	Percentage
+1	Degree-granting		
+2	Nondegree-granting, primarily postsecondary		
+-3	{Not available}
+
+
+
+- HBCU
+A code to indicate whether the institution is one of the Historically Black College or University (HBCU) institutions.
+
+Historically Black Colleges and Universities (HBCU) - The Higher Education Act of 1965, as amended, defines an HBCU as: "...any historically black college or university that was established prior to 1964, whose principal mission was, and is, the education of black Americans, and that is accredited by a nationally recognized accrediting agency or association determined by the Secretary [of Education] to be a reliable authority as to the quality of training offered or is, according to such an agency or association, making reasonable progress toward accreditation." Federal regulations (20 USC 1061 (2)) allow for certain exceptions to the founding date.
+
+1	Yes		
+2	No
+
+
+- HOSPITAL
+A code to indicate whether the institution has hospital.
+1	Yes		
+2	No		
+-1	Not reported		
+-2	Not applicable	
+
+
+
+- MEDICAL 
+A code to indicate whether the institution grants a medical degree.
+
+This variable is derived from the 2012-13 completions component of the IPEDS survey.
+
+Medical degrees include:
+Medicine (M.D.) (51.1201),
+Dentistry (D.D.S., D.M.D.) (51.0401)
+Osteopathic Medicine (D.O.) (51.1901)
+Veterinary Medicine (D.V.M.) (51.2401)
+
+1	Yes		
+2	No		
+-1	Not reported		
+-2	Not applicable	
+
+
+
+
+- TRIBAL
+A code to indicate whether the institution is one of the Tribal Colleges and Universities. These institutions, with few exceptions, are tribally controlled and located on reservations. They are all members of the American Indian Higher Education Consortium.
+
+1	Yes		
+2	No
+
+
+
+
+- LOCALE
+Locale codes identify the geographic status of a school on an urban continuum ranging from “large city” to “rural.” They are based on a school’s physical address. The urban-centric locale codes introduced in this file are assigned through a methodology developed by the U.S. Census Bureau’s Population Division in 2005.
+
+11	City: Large		
+12	City: Midsize		
+13	City: Small		
+21	Suburb: Large		
+22	Suburb: Midsize		
+23	Suburb: Small		
+31	Town: Fringe		
+32	Town: Distant		
+33	Town: Remote		
+41	Rural: Fringe		
+42	Rural: Distant		
+43	Rural: Remote		
+-3	{Not available}
+
+
+
+- OPENPUBL
+A code to indicate whether the institution is open for admission to the general public.
+
+1	Institution is open to the public		
+0	Institution is not open to the public	
+
+
+
+- ACT
+A code to indicate the status of institution's participation in IPEDS.
+
+A	Active - institution active		
+N	New (active) - added during the current year		
+R	Restore (active) - restored to the current universe		
+M	Closed in current year (active has data)		
+C	Combined with other institution		
+D	Delete out of business		
+I	Inactive due to hurricane related problems		
+O	Out-of-scope of IPEDS - not postsecondary		
+P	Potential new/add institution		
+Q	Potential restore institution		
+W	Potential add not within scope of IPEDS		
+X	Potential restore not within scope of IPEDS		
+G	Perfect child campus - data reported with main campus, but is listed on college navigator
+
+
+
+
+- NEWID
+
+
+
+- DEATHYR
+Year institution was deleted from IPEDS.
+2021	2021		
+-2	Not applicable
+
+
+
+
+"CLOSEDAT
+Date institution closed - format is mmddyyyy
+
+
+
+CYACTIVE
+A code to indicate whether the institution is active in current year. This code is derived from the more detailed ACT (status of institution) variable.
+
+Active school CYACTIVE=1 includes:
+ACT=A an open (active) institution
+ACT=N an institution that opened in the current year
+ACT=M an institution that closed in the current year, but will have data from the previous academic year for example Finance or Completions data for academic year 2016-17
+ACT=R an institution that was previously not active and was restored in the current year
+
+CYACTIVE=2 includes potential adds and restores (ACT=P,R)
+
+CYACTIVE=3 includes all other inactive institutions
+ACT=C combined with another active institution
+ACT=D delete institution is out of business
+ACT=O institution is out-of-scope
+ACT=W potential add that was not added
+ACT=X potential restore that was not restored
+
+1	Yes		
+2	No, potential add or restore		
+3	No, closed, combined, or out-of-scope	
+
+
+
+
+- POSTSEC
+A derived indicator to easily select institutions who are (1) currently in the IPEDS universe, (2) open to the public, (3) participant in Title IV program, and (4) primarily postsecondary institution.
+
+1	Title IV postsecondary institution		
+2	Non-Title IV postsecondary institution		
+3	Title IV NOT primarily postsecondary institution		
+4	Non-Title IV NOT primarily postsecondary institution		
+5	Title IV postsecondary institution that is NOT open to the public		
+6	Non-Title IV postsecondary institution that is NOT open to the public		
+9	Institution is not active in current universe		
+
+
+
+
+
+
+"PSEFLAG
+Postsecondary institution indicator
+Identifies an institution whose primary purpose is to provide postsecondary education,is open to the general public and is currently an active (operating) institution.
+
+1	Active postsecondary institution		
+2	Not primarily postsecondary or open to public		
+3	Not active
+
+
+
+- PSET4FLG
+A derived indicator to easily select institutions who are (1) currently in the IPEDS universe, (2) open to the public, (3) participant in Title IV program, and (4) primarily postsecondary institution.
+
+1	Title IV postsecondary institution		
+2	Non-Title IV postsecondary institution		
+3	Title IV NOT primarily postsecondary institution		
+4	Non-Title IV NOT primarily postsecondary institution		
+5	Title IV postsecondary institution that is NOT open to the public		
+6	Non-Title IV postsecondary institution that is NOT open to the public		
+9	Institution is not active in current universe
+
+
+
+
+- RPTMTH
+Reporting method identifies how institutions report student charges (full academic year or by program) and the type of cohort (fall or full-year) used to report graduation rate, retention rate and student financial aid data.
+1	Student charges for full academic year and fall GR/SFA/retention rate cohort		
+3	Student charges for full academic year and full-year GR/SFA/retention rate cohort		
+2	Student charges by program and full-year GR/SFA/retention rate cohort		
+-1	Not reported		
+-2	Not applicable
+
+
+
+
+- INSTCAT
+Institutional category was derived using the level of offerings reported on the Institutional Characteristics (IC) component and the number and level of awards that were reported on the Completions (C) component.
+
+1	Degree-granting, graduate with no undergraduate degrees		
+2	Degree-granting, primarily baccalaureate or above		
+3	Degree-granting, not primarily baccalaureate or above		
+4	Degree-granting, associate's and certificates		
+5	Nondegree-granting, above the baccalaureate		
+6	Nondegree-granting, sub-baccalaureate		
+-1	Not reported		
+-2	Not applicable
+
+
+
+
+- C18BASIC
+The Basic Classification is an update of the traditional classification framework developed by the Carnegie Commission on Higher Education in 1970 to support its research program. The Basic Classification was originally published for public use in 1973, and subsequently updated in 1976, 1987, 1994, 2000, 2005, 2010, 2015 and 2018. In the 2018 update, the Doctoral Universities have been reshaped to better accommodate “Doctor's degree – professional practice” within our methodology. Please see the Basic Classification Methodology for details regarding how this classification is calculated.
+
+Doctoral universities - Includes institutions that awarded at least 20 research/scholarship doctoral degrees during the update year and also institutions with below 20 research/scholarship doctoral degrees that awarded at least 30 professional practice doctoral degrees in at least 2 programs. Excludes Special Focus Institutions and Tribal Colleges.
+
+The first two categories include only institutions that awarded at least 20 research/scholarship doctoral degrees and had at least $5 million in total research expenditures (as reported through the National Science Foundation (NSF) Higher Education Research & Development Survey (HERD)).
+
+R1: Doctoral Universities – Very high research activity
+R2: Doctoral Universities – High research activity
+D/PU: Doctoral/Professional Universities
+
+Master's Colleges and Universities - Generally includes institutions that awarded at least 50 master's degrees and fewer than 20 doctoral degrees during the update year (with occasional exceptions – see Methodology). Excludes Special Focus Institutions and Tribal Colleges.
+
+Baccalaureate Colleges - Includes institutions where baccalaureate or higher degrees represent at least 50 percent of all degrees but where fewer than 50 master's degrees or 20 doctoral degrees were awarded during the update year. (Some institutions above the master's degree threshold are also included; see Methodology.) Excludes Special Focus Institutions and Tribal Colleges.
+
+Baccalaureate/Associate's Colleges - Includes four-year colleges (by virtue of having at least one baccalaureate degree program) that conferred more than 50 percent of degrees at the associate's level. Excludes Special Focus Institutions and Tribal Colleges.
+
+Associate's Colleges - Institutions at which the highest level degree awarded is an associate's degree. The institutions are sorted into nine categories based on the intersection of two factors: disciplinary focus (transfer, career & technical or mixed) and dominant student type (traditional, nontraditional or mixed). Excludes Special Focus Institutions and Tribal Colleges.
+
+Special Focus Institutions- Institutions where a high concentration of degrees is in a single field or set of related fields. Excludes Tribal Colleges.
+
+Tribal Colleges - Colleges and universities that are members of the American Indian Higher Education Consortium, as identified in IPEDS Institutional Characteristics.
+
+Classifications are time-specific snapshots of institutional attributes and behavior based on 2016-17 data.
+
+The methodology can be found at http://carnegieclassifications.iu.edu/definitions.php.
+
+
+1	Associate's Colleges: High Transfer-High Traditional		
+2	Associate's Colleges: High Transfer-Mixed Traditional/Nontraditional		
+3	Associate's Colleges: High Transfer-High Nontraditional		
+4	Associate's Colleges: Mixed Transfer/Career & Technical-High Traditional		
+5	Associate's Colleges: Mixed Transfer/Career & Technical-Mixed Traditional/Nontraditional		
+6	Associate's Colleges: Mixed Transfer/Career & Technical-High Nontraditional		
+7	Associate's Colleges: High Career & Technical-High Traditional		
+8	Associate's Colleges: High Career & Technical-Mixed Traditional/Nontraditional		
+9	Associate's Colleges: High Career & Technical-High Nontraditional		
+10	Special Focus Two-Year: Health Professions		
+11	Special Focus Two-Year: Technical Professions		
+12	Special Focus Two-Year: Arts & Design		
+13	Special Focus Two-Year: Other Fields		
+14	Baccalaureate/Associate's Colleges: Associate's Dominant		
+15	Doctoral Universities: Very High Research Activity		
+16	Doctoral Universities: High Research Activity		
+17	Doctoral/Professional Universities		
+18	Master's Colleges & Universities: Larger Programs		
+19	Master's Colleges & Universities: Medium Programs		
+20	Master's Colleges & Universities: Small Programs		
+21	Baccalaureate Colleges: Arts & Sciences Focus		
+22	Baccalaureate Colleges: Diverse Fields		
+23	Baccalaureate/Associate's Colleges: Mixed Baccalaureate/Associate's		
+24	Special Focus Four-Year: Faith-Related Institutions		
+25	Special Focus Four-Year: Medical Schools & Centers		
+26	Special Focus Four-Year: Other Health Professions Schools		
+27	Special Focus Four-Year: Engineering Schools		
+28	Special Focus Four-Year: Other Technology-Related Schools		
+29	Special Focus Four-Year: Business & Management Schools		
+30	Special Focus Four-Year: Arts, Music & Design Schools		
+31	Special Focus Four-Year: Law Schools		
+32	Special Focus Four-Year: Other Special Focus Institutions		
+33	Tribal Colleges		
+0	(Not classified)		
+-2	Not applicable, not in Carnegie universe (not accredited or nondegree-granting)
+
+
+
+
+
+
+- C18IPUG
+
+
+
+
+
+
+"C18IPGRD" 
+
+
+"C18UGPRF"
+
+
+- "C18ENPRF"
+
+"C18SZSET"
+
+"C15BASIC
+
+1	Associate's Colleges: High Transfer-High Traditional		
+2	Associate's Colleges: High Transfer-Mixed Traditional/Nontraditional		
+3	Associate's Colleges: High Transfer-High Nontraditional		
+4	Associate's Colleges: Mixed Transfer/Career & Technical-High Traditional		
+5	Associate's Colleges: Mixed Transfer/Career & Technical-Mixed Traditional/Nontraditional		
+6	Associate's Colleges: Mixed Transfer/Career & Technical-High Nontraditional		
+7	Associate's Colleges: High Career & Technical-High Traditional		
+8	Associate's Colleges: High Career & Technical-Mixed Traditional/Nontraditional		
+9	Associate's Colleges: High Career & Technical-High Nontraditional		
+10	Special Focus Two-Year: Health Professions		
+11	Special Focus Two-Year: Technical Professions		
+12	Special Focus Two-Year: Arts & Design		
+13	Special Focus Two-Year: Other Fields		
+14	Baccalaureate/Associate's Colleges: Associate's Dominant		
+15	Doctoral Universities: Highest Research Activity		
+16	Doctoral Universities: Higher Research Activity		
+17	Doctoral Universities: Moderate Research Activity		
+18	Master's Colleges & Universities: Larger Programs		
+19	Master's Colleges & Universities: Medium Programs		
+20	Master's Colleges & Universities: Small Programs		
+21	Baccalaureate Colleges: Arts & Sciences Focus		
+22	Baccalaureate Colleges: Diverse Fields		
+23	Baccalaureate/Associate's Colleges: Mixed Baccalaureate/Associate's		
+24	Special Focus Four-Year: Faith-Related Institutions		
+25	Special Focus Four-Year: Medical Schools & Centers		
+26	Special Focus Four-Year: Other Health Professions Schools		
+27	Special Focus Four-Year: Engineering Schools		
+28	Special Focus Four-Year: Other Technology-Related Schools		
+29	Special Focus Four-Year: Business & Management Schools		
+30	Special Focus Four-Year: Arts, Music & Design Schools		
+31	Special Focus Four-Year: Law Schools		
+32	Special Focus Four-Year: Other Special Focus Institutions		
+33	Tribal Colleges		
+0	(Not classified)		
+-2	Not applicable, not in Carnegie universe (not accredited or nondegree-granting)		
+Variable Description
+The Basic Classification is an update of the traditional classification framework developed by the Carnegie Commission on Higher Education in 1970 to support its research program. The Basic Classification was published for use in 1973, and subsequently updated in 1976, 1987, 1994, 2000, 2005 and 2010 and 2015. The 2005 edition involved some significant changes from the previous releases by dividing Associate's colleges into subcategories and using a multi-measure research index to classify doctorate-granting institutions. The 2010 update retained the same classification structure as the 2005 edition. In the 2015 update, the Associate's Categories were substantially redefined and the categories of the Research Doctoral Universities changed (but not the calculation methodology). Please see the Basic Classification Methodology for details regarding how this classification is calculated.
+
+Note: The "shorthand" labels for the Doctoral Universities and Master's Colleges and Universities were restored in the 2015 update to numeric sequences (R1, R2, R3, and M1, M2, M3) to denote that each one is based on differences in quantitative levels. For doctoral universities, the levels are based on a research activity index and for master's colleges and universities it is based on number of degrees conferred.
+
+Doctoral Universities - Includes institutions that awarded at least 20 research/scholarship doctoral degrees during the update year (this does not include professional practice doctoral-level degrees, such as the JD, MD, PharmD, DPT, etc.). Excludes Special Focus Institutions and Tribal Colleges.
+
+Master's Colleges and Universities - Generally includes institutions that awarded at least 50 master's degrees and fewer than 20 doctoral degrees during the update year (with occasional exceptions – see Methodology). Excludes Special Focus Institutions and Tribal Colleges.
+
+Baccalaureate Colleges - Includes institutions where baccalaureate or higher degrees represent at least 50 percent of all degrees but where fewer than 50 master's degrees or 20 doctoral degrees were awarded during the update year. (Some institutions above the master's degree threshold are also included; see Methodology.) Excludes Special Focus Institutions and Tribal Colleges.
+
+Baccalaureate/Associate's Colleges - Includes four-year colleges (by virtue of having at least one baccalaureate degree program) with fewer than 50 percent of degrees awarded at the associate's level. Excludes Special Focus Institutions and Tribal Colleges.
+
+Associate's Colleges - Institutions at which the highest level degree awarded is an associate's degree. The institutions are sorted into nine categories based on the intersection of two factors: disciplinary focus (transfer, career & technical or mixed) and dominant student type (traditional, nontraditional or mixed). Excludes Special Focus Institutions and Tribal Colleges.
+
+Special Focus Institutions- Institutions where a high concentration of degrees is in a single field or set of related fields. Excludes Tribal Colleges.
+
+Tribal Colleges - Colleges and universities that are members of the American Indian Higher Education Consortium, as identified in IPEDS Institutional Characteristics.
+
+Classifications are time-specific snapshots of institutional attributes and behavior based on 2013-14 data.
+
+The methodology can be found at http://carnegieclassifications.iu.edu/methodology/basic.php.
+
+
+
+"CCBASIC"  "CARNEGIE" "LANDGRNT" "INSTSIZE" "F1SYSTYP" "F1SYSNAM" "F1SYSCOD" "CBSA"     "CBSATYPE" "CSA"     
+[66] "NECTA"    "COUNTYCD" "COUNTYNM" "CNGDSTCD" "LONGITUD" "LATITUDE" "DFRCGID"  "DFRCUSCG"

@@ -1,0 +1,287 @@
+---
+title: "KMeans Part 2 Revised"
+author: "Kehinde Fagbamigbe"
+date: "2022-11-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+# working code
+```{r}
+set.seed(1) #Using seed to validate my answer and approach. it is not needed.
+
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist)
+  
+}
+
+test_first = function(x, k){
+  random_center_index = sample(1:nrow(x), size = k)
+  cluster_diff = array(NA, c(1,k))
+  df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) 
+  colnames(df) <- c(colnames(x))
+  clusters = rep(list(df), k)
+  
+  
+  for (j in 1:nrow(x)) {
+    for (h in 1:k) {
+      cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] )
+      
+    }
+    index_of_max_centre = which.min(cluster_diff)
+    clusters[[index_of_max_centre]] = rbind(clusters[[index_of_max_centre]], x[j,] )
+    
+  }
+  
+  
+  
+  return (clusters)
+}
+```
+
+
+
+```{r}
+set.seed(1)
+test_first(x, 2)
+```
+
+```{r}
+set.seed(1)
+new = test_first(x, 2)
+new
+```
+
+```{r}
+new[[2]]
+```
+
+```{r}
+apply( new[[2]], 2, mean)
+```
+
+
+```{r}
+apply( new[[1]], 2, mean)
+```
+
+```{r}
+cov(new[[2]])
+```
+
+```{r}
+cov(new[[1]])
+```
+
+
+```{r}
+test_first(x, 5)
+```
+
+
+
+```{r}
+set.seed(1) #Using seed to validate my answer and approach. it is not needed.
+
+#function to calculate euclidean distance
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist) #returns euclidean distance between two points or two vectors
+  
+}
+
+test = function(x, k){
+  random_center_index = sample(1:nrow(x), size = k) #radomnly selects a row of a specified size as intial center
+  cluster_diff = array(NA, dim = c(1,k)) #create a dummy array of 1 row and specified k column. This will hold the distances calculated amongst all the clusters
+  df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0))  #creating a dummy dataframe of no row and same no of column as the original data
+  colnames(df) <- c(colnames(x)) #renaming the column of the created dataframe with data's column name
+  clusters = rep(list(df), k) #duplicating the created dataframe in the specified cluster amount
+  
+  for (j in 1:nrow(x)) { #for each of the rows in the data
+    for (h in 1:k) { #for each of the specified cluster
+      cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] ) #calculate the euclidean distance between each observation and  the randonly selected centres
+      
+    }
+    index_of_min_centre = which.min(cluster_diff) #find the index of the smallest euclidean distance across all the clusters
+    clusters[[index_of_min_centre]] = rbind(clusters[[index_of_min_centre]], x[j,] ) #adding to the row where the cluster belongs based on euclidean distance
+    
+  }
+  
+  # cluster_centres = list()
+  # covariance = list()
+  # p <- dim(x)[2]
+  # Mu = matrix(0, nrow = p, ncol = K)
+  # covariance = array(0, dim = c(p,p,K))
+  cluster_centres = list()
+  covariance = list()
+
+  for (l in 1:k){
+    
+    #for a 4 column data with a three cluster algorithm we should have
+    # a mean of vector of 1*4 in three places
+    # a covariance matrix with dimension 4*4 in three places.
+    
+    
+    cluster_centres[[l]] <- apply(clusters[[l]], 2, mean )
+    covariance[[l]] <- (array(cov(clusters[[l]]), dim = c(dim(x)[2], dim(x)[2],l)))
+    
+    # cluster_centres[[l]] <- (km$centers)
+    # covariance[[l]] <- (array(c(diag(p)), dim = c(p,p,k)))
+    
+  }
+  
+  return (list(clusters = clusters, mean = cluster_centres, cov_matrix = covariance ))
+ # return (list(clusters = clusters, cluster_centres = cluster_centres, covariance = covariance ))
+}
+
+
+```
+
+
+```{r}
+set.seed(1)
+trial = test(x, 2)
+trial
+```
+
+
+
+
+
+
+```{r}
+# M.step <- function(x, Pi){
+#   x <- as.matrix(x)
+#   K <- dim(Pi)[2]
+#   n <- dim(x)[1]
+#   p <- dim(x)[2]
+#   Mu = matrix(0, nrow = p, ncol = K)
+#   covariance = array(0, dim = c(p,p,K))
+#   
+#   Sum.Pi <- apply(Pi, 2, sum)
+#   tau <- Sum.Pi / n
+#   
+#   
+#   for (k in 1:K){
+#     
+#     for (i in 1:n){
+#       Mu[,k] <- Mu[,k] + Pi[i,k] %*% t(x[i,])
+#     }
+#     Mu[,k] <- Mu[,k] / Sum.Pi[k]
+#     
+#     for (i in 1:n){   
+#       covariance[, , k] <- covariance[, , k] + (Pi[i,k] *  ( as.matrix(x[i,] - Mu[,k])) %*%  t(as.matrix(x[i,] - Mu[,k])))
+#     }
+#     covariance[, , k] <- covariance[, , k] / Sum.Pi[k]
+#     
+#   }
+#   
+#   return(list(tau = tau, Mu = Mu, covariance = covariance))
+#   
+# }
+```
+
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+
+```{r}
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 1)) 
+df
+```
+
+
+
+```{r}
+cluster_diff = array(NA, dim = c(1,6))
+cluster_diff
+```
+
+```{r}
+which(cluster_diff[4])
+```
+
+
+
+
+```{r}
+eucl.dist <- function(R, G){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist)
+}
+```
+
+
+```{r}
+Mu = matrix(0, nrow = 4, ncol = 3)
+Mu
+```
+
+
+
+
+
+## Original Copy
+```{r}
+set.seed(1) #Using seed to validate my answer and approach. it is not needed.
+
+#function to calculate euclidean distance
+eucl.dist <- function(X, Y){
+  dist <- sqrt(sum((X - Y)^2))
+  return(dist) #returns euclidean distance between two points or two vectors
+  
+}
+
+test = function(x, k){
+  random_center_index = sample(1:nrow(x), size = k) #radomnly selects a row of a specified size as intial center
+  cluster_diff = array(NA, dim = c(1,k)) #create a dummy array of 1 row and specified k column. This will hold the distances calculated amongst all the clusters
+  df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0))  #creating a dummy dataframe of no row and same no of column as the original data
+  colnames(df) <- c(colnames(x)) #renaming the column of the created dataframe with data's column name
+  clusters = rep(list(df), k) #duplicating the created dataframe in the specified cluster amount
+  
+  for (j in 1:nrow(x)) { #for each of the rows in the data
+    for (h in 1:k) { #for each of the specified cluster
+      cluster_diff[h] = eucl.dist( x[j,] , x[random_center_index[h],] ) #calculate the euclidean distance between each observation and  the randonly selected centres
+      
+    }
+    index_of_min_centre = which.min(cluster_diff) #find the index of the smallest euclidean distance across all the clusters
+    clusters[[index_of_min_centre]] = rbind(clusters[[index_of_min_centre]], x[j,] ) #adding to the row where the cluster belongs based on euclidean distance
+    
+  }
+  
+  cluster_centres = list()
+  covariance = list()
+
+  for (l in 1:k){
+    
+    #for a 4 column data with a three cluster algorithm we should have
+    # a mean of vector of 1*4 in three places
+    # a covariance matrix with dimension 4*4 in three places.
+    
+    
+    cluster_centres[[l]] <- apply(clusters[[l]], 2, mean )
+    covariance[[l]] <- (array(cov(clusters[[l]]), dim = c(dim(x)[2], dim(x)[2],l)))
+    
+  }
+  
+  return (list(clusters = clusters, cluster_centres = cluster_centres, covariance = covariance ))
+}
+
+```
+

@@ -1,0 +1,190 @@
+---
+title: "Project KMeans Manual"
+author: "Kehinde Fagbamigbe"
+date: "2022-11-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+```{r}
+nrow(x)
+```
+
+```{r}
+set.seed(1)
+random_center_index = sample(1:nrow(x), size = 2)
+random_center_index
+```
+```{r}
+center1 = random_center_index[1]
+center1
+```
+
+```{r}
+center2 = random_center_index[2]
+center2
+```
+
+
+```{r}
+x[53:76,]
+```
+
+```{r}
+x[center1,]
+```
+
+```{r}
+class(x[center1,])
+```
+
+
+```{r}
+c1_centers = x[53,] - x[center1,]
+c1_centers
+```
+
+```{r}
+c1_centers = x[53,] - x[center1,]
+abs(c1_centers)
+```
+
+```{r}
+c1 = apply(abs(c1_centers), 1, sum)
+c1
+```
+
+
+```{r}
+set.seed(1)
+random_center_index = sample(1:nrow(x), size = 2)
+center1 = random_center_index[1]
+center2 = random_center_index[2]
+cluster1 = list()
+cluster2 = list()
+
+
+for (i in 1:nrow(x)) {
+  c1_centers = x[i,] - x[center1,]
+  c2_centers = x[i,] - x[center2,]
+  c1 = apply(abs(c1_centers), 1, sum)
+  c2 = apply(abs(c2_centers), 1, sum)
+  
+  if (c1 >= c2){
+    
+    cluster1[[i]] = x[i,]
+    
+  }
+  
+  else{
+    
+    cluster2[[i]] = x[i,]
+    
+  }
+  
+  
+  
+}
+
+
+
+```
+
+
+```{r}
+cluster1
+```
+
+
+```{r}
+cluster2
+```
+
+
+$$ A\ better\ Approach $$
+
+```{r}
+#create data frame with 0 rows and 3 columns
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0))
+#provide column names
+colnames(df) <- c('V1', 'V2', 'V3', 'V4')
+df
+```
+
+```{r}
+dim(x)[2]
+```
+
+
+```{r}
+
+
+
+set.seed(1)
+random_center_index = sample(1:nrow(x), size = 2)
+center1 = random_center_index[1]
+center2 = random_center_index[2]
+cluster1 = list()
+cluster2 = list()
+df <- data.frame(matrix(ncol = dim(x)[2], nrow = 0)) #create an empty dataframe
+colnames(df) <- c('V1', 'V2', 'V3', 'V4') #I can dynamically rename the variables base on the data or just get the column names from the data itself.
+cluster1 = df
+cluster2 = df
+
+for (i in 1:nrow(x)) {
+  c1_centers = x[i,] - x[center1,]
+  c2_centers = x[i,] - x[center2,]
+  c1 = apply(abs(c1_centers), 1, sum)
+  c2 = apply(abs(c2_centers), 1, sum)
+  
+  if (c1 >= c2){
+    
+    cluster1 = rbind(cluster1, x[i,] )
+    #cluster1[[i]] = x[i,]
+    
+  }
+  
+  else{
+    
+    cluster2 = rbind(cluster2, x[i,] )
+    #cluster2[[i]] = x[i,]
+    
+  }
+  
+  
+  
+}
+
+
+
+```
+
+
+
+
+```{r}
+cluster1
+```
+
+
+
+```{r}
+cluster2
+```
+```{r}
+nrow(cluster1)
+```
+
+```{r}
+nrow(cluster2)
+```
+

@@ -1,0 +1,526 @@
+---
+title: "Project 2"
+author: "Kehinde Fagbamigbe"
+date: '2022-09-18'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### The package for multivariate distribution is the dmvnorm which is in the mvtnorm package in R
+#### Installing the mvtnorm library
+```{r}
+library(mvtnorm)
+```
+
+
+
+#### Importing the dataser
+$$ Data $$
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+
+### Goal
+
+
+####  Multivariate Gaussian Mixture
+
+$$\mathcal{N}  (x_i|\mu_k, \Sigma_k) = \frac{1}{(2\pi)^{(p/2)} |\Sigma_k|^{1/2}} \exp \left\{- \frac{1}{2} \left(x_i-\mu_k\right)^{'} \Sigma_k^{-1} \left(x_i-\mu_k \right)  \right\}$$
+
+#### Preliminary
+$$g(x_i,\vartheta) = \sum\limits_{k=1}^{k}\tau_kf_k(x_i,\theta_k)$$
+where
+
+$$\begin{aligned}
+g(x_i,\vartheta)\ is\ a\ pdf \\
+\tau_k\ is\ the\ mixing\ proportion\ or\ the\ weights \\
+x_i\  is\ the\ mixing\ component \\
+\theta_k\ is\ the\ parameter \\
+\end{aligned}$$
+
+
+
+* The mixture component knows the cluster by taking a weighted sum of several probalantity distritutions and it assumes each clusters in your data corresponds to one mixtire component.
+
+* The best no of cluster is chosen based on the model with the best Bayesian Information Criterion also known as penalized Log Likelihood.
+
+
+* In the Expectation Maximization (EM) Algorithm, The E-step gives us the posterior Probability, which is the probability that the ith observation is coming fro the kth component.
+
+* The M-step, gives us the maximum likelihood estimate of the mixture model Parameters.
+
+* The joint probabbility aka likelihood is the product of each prior probability e.g P(A) * P(B). For an independent and identically distributed (iid) variable xi, the joint probability is the product of the pdf
+
+
+$$\prod_{i = 1}^{n} g(x_i,\vartheta)  = L (\vartheta)$$
+$$where\ (\vartheta)\ is\ the\ Likelihood$$
+
+$$Recall\ g(x_i,\vartheta) = \sum\limits_{k=1}^{k}\tau_kf_k(x_i,\theta_k)$$
+$$Therefore:  L (\vartheta) = \prod_{i = 1}^{n}g(x_i,\vartheta) =\pi_{i=1}^{n}  \sum\limits_{k=1}^{k}\tau_kf_k(x_i,\theta_k)$$
+
+
+#### Taking the Logarithm of the Likelihood( called Log Likelihood)
+
+$$ LogL (\vartheta) = \pi_{i=1}^{n} g(x_i,\vartheta) = Log(\pi_{i=1}^{n}  \sum\limits_{k=1}^{k}\tau_kf_k(x_i,\theta_k))\\$$
+
+$$From\ Calculus: Log\prod = \sum$$
+$$LogL (\vartheta)  =  \sum\limits_{k=1}^{n}$$
+
+$$Log (\sum\limits_{k=1}^{k}\tau_kf_k(x_i,\theta_k))$$
+
+
+
+
+$$From\ Calculus:$$
+$$Log(mn) = Logm + Logn$$
+
+
+
+$$Log(m+n)\ != Logm + Logn$$
+
+
+#### To solve further, we need to find the complete Log Likelihood to work around the logarithm roadblock
+#### Assumptions of Complete Log Likelihood
+
+* We assume we know the missing labels of the clusters
+* The missing labels will denoted as Zi
+
+
+$$if\ k\ is\ the\ number\ of\ clusters:$$
+$$Zi  \in \left\{ 1, 2,3,..., k \right\}$$
+
+$$each\ of\ the\ observations\ x_i\ to\ x_n\ belongs\ to\ one\ component\ Z_i\ to\ Z_k\\ $$
+$$i.e\ x_i\ can\ only\ come\ from\ one\ component\ Z_i \\ This\ makes\ us\ have\ the\ complete\ Log\ likelihood\ denoted\ as\ LogL_c$$
+$$ g(x_i,\vartheta) = \sum\limits_{k=1}^{k}\tau_kf_k(x_i,\theta_k) = \prod_{k = 1}^{k} (\tau_kf_k(x_i,\theta_k))^{I(Z_i = k)}$$
+$$since\ \sum\limits_{k=1}^{k}\tau_kf_k(x_i,\theta_k) = \prod_{k = 1}^{k} (\tau_kf_k(x_i,\theta_k))^{I(Z_i = k)}$$
+$$LogL_c (\vartheta)  =  \sum\limits_{k=1}^{n} Log (\sum\limits_{k=1}^{k}\tau_kf_k(x_i,\theta_k)) = \sum\limits_{k=1}^{n} Log(\prod_{k = 1}^{k} (\tau_kf_k(x_i,\theta_k))^{I(Z_i = k)}) $$
+$$Recall\ Log\prod = \sum $$ 
+
+$$LogL_c (\vartheta)  = \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k} I(Z_i = k) Log (\tau_kf_k(x_i,\theta_k))$$
+
+
+
+#### Expectation Maximization Algorithm method (EM)
+
+* This consist of two steps The Expectation 
+  * Expectation Step (E-Step)
+  * Maximization (M-Step)
+  
+  
+* E-step:
+  The\ expectaton\ of\ the\ complete\ Log\ likelihood\ given\ x.\ this\ is\ also\ called\ the\ Q-function.$$
+
+
+$$Q = (\vartheta |\vartheta^{B-1}, x_i, x_2,\dots,x_n) = \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k}E[ I(Z_i = k) | x_i]  Log (\tau_kf_k(x_i,\theta_k))$$
+
+$$Using\ Bayes\ theorem$$
+
+$$P(A | B) =  \frac{(A \cap B)}{P(B)}$$  
+
+$$P(A | B) =  \frac{ P(B | A) P(A) } {P(B)} $$
+$$Therefore: E[ I(Z_i = k) | x_i] =  \frac{ P(x_i | Z_i = k) P(Z = k) } {\sum\limits_{k=1}^{k} P(Z_i = k^{'} ) P(x_i | Z_i = k^{'}) }$$
+
+$$E[ I(Z_i = k) | x_i] = \frac{ \tau_k^{(b_i-1)} f_k(x_i, \theta_k^{(b_i-1)}} {\sum\limits_{i=1}^{k} \tau_k^{(b_i-1)} f_k(x_i, \theta_k^{(b_i-1)} }) = \pi_{ik}^{(b)}$$
+
+
+$$\pi_{ik}^{(b)} => This\ is\ the\ Posterior\ Probability\\$$
+
+
+
+
+$$Substituting\ the\ expectation\ calculated\ in\ the\ Q-function$$
+
+$$Q = (\vartheta |\vartheta^{B-1}, x_i, x_2,....,x_n) = \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k}E[ I(Z_i = k) | x_i]  Log (\tau_kf_k(x_i,\theta_k))$$
+
+$$Recall: Log(mn) = Logm + Logn$$
+
+$$Q = (\vartheta |\vartheta^{B-1}, x_i, x_2,....,x_n) = \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k}E[ I(Z_i = k) | x_i]  Log (\tau_kf_k(x_i,\theta_k)) = \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k}E[ I(Z_i = k) | x_i]  ( Log (\tau_k) + Log f_k(x_i,\theta_k))$$
+
+$$Q = (\vartheta |\vartheta^{B-1}, x_i, x_2,....,x_n) = \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k}\pi_{ik}^{(b)} ( Log (\tau_k) + Log f_k(x_i,\theta_k))$$
+
+
+$$Differentiating\ to\ get\ the\ parameters\ of\ the\ distribution$$
+
+
+$$\displaystyle \frac{\partial Q}{\partial \tau_k} =  \frac{\partial }{\partial \tau_k} \left\{ \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k}\pi_{ik}^{(b)} Log (\tau_k)\right\}$$
+
+
+$$Recall\ we\ have\ a\ constraint: \sum\limits_{k=1}^{k}\tau_k = 1 \\$$
+$$Using\ Lagrange\ multiplier (\lambda)$$
+
+$$(\lambda):\displaystyle \frac{\partial Q}{\partial \tau_k} =  \frac{\partial }{\partial \tau_k} \left\{ \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k}\pi_{ik}^{(b)} Log (\tau_k) - \lambda(\sum\limits_{k=1}^{k}\tau_k - 1)  \right\}$$
+
+
+$$\displaystyle \frac{\partial Q}{\partial \tau_k} =  \frac{\partial }{\partial \tau_k} \left\{ \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k}\pi_{ik}^{(b)} Log (\tau_k) - \lambda(\sum\limits_{k=1}^{k}\tau_k - 1)  \right\} =   \frac{\partial }{\partial \tau_k} \left\{ \sum\limits_{i=1}^{n} \sum\limits_{k=1}^{k}\pi_{ik}^{(b)} Log (\tau_k) - \lambda\sum\limits_{k=1}^{k}\tau_k + \lambda  \right\}$$
+
+
+$$\displaystyle \frac{\partial Q}{\partial \tau_k} =  \frac{\partial }{\partial \tau_k} \left\{ \sum\limits_{i=1}^{n} \pi_{ik}^{(b)}\frac{1}  {\tau_k} - \lambda  \right\}$$
+
+$$Equating \displaystyle \frac{\partial Q}{\partial \tau_k}\ = 0$$
+
+
+
+$$\displaystyle \frac{\partial Q}{\partial \tau_k} =  \frac{\partial }{\partial \tau_k} \left\{ \sum\limits_{i=1}^{n} \pi_{ik}^{(b)}\frac{1}  {\tau_k}  \right\}  - \lambda  = 0$$
+
+
+$$\left\{ \sum\limits_{i=1}^{n} \pi_{ik}^{(b)}\frac{1}  {\tau_k}  \right\}  - \lambda  = 0 \\ \left\{ \frac{1}  {\tau_k} \sum\limits_{i=1}^{n} \pi_{ik}^{(b)}  \right\}  = \lambda$$
+
+$${\tau_k} =   \left\{ \frac{1} { \lambda}  \sum\limits_{i=1}^{n} \pi_{ik}^{(b)}  \right\}$$
+
+
+$$\sum\limits_{k=1}^{k}\tau_k = 1$$
+
+$$Therefore\  \sum\limits_{k=1}^{k}\tau_k =  \left\{ \sum\limits_{k=1}^{k} \frac{1} { \lambda}  \sum\limits_{i=1}^{n} \pi_{ik}^{(b)} = 1  \right\}$$ 
+
+
+$$\frac{1} { \lambda}  \sum\limits_{i=1}^{n}  \sum\limits_{k=1}^{k} \pi_{ik}^{(b)} = 1$$
+
+
+
+ $$\sum\limits_{k=1}^{k} \pi_{ik}^{(b)} = 1$$
+ 
+$$ \frac{1} { \lambda}  \sum\limits_{i=1}^{n}  \sum\limits_{k=1}^{k} \pi_{ik}^{(b)}  = 1$$
+
+$$\frac{1} { \lambda}  \sum\limits_{i=1}^{n} 1 = 1$$
+ 
+ $${ \lambda}  =  \sum\limits_{i=1}^{n} 1 = 1$$
+ 
+$$ { \lambda}  =  n$$
+
+$$Recall, {\tau_k} =   \left\{ \frac{1} { \lambda}  \sum\limits_{i=1}^{n} \pi_{ik}^{(b)}  \right\} $$
+
+
+$$Therefore, {\tau_k} =   \left\{ \frac{1} { n}  \sum\limits_{i=1}^{n} \pi_{ik}^{(b)}  \right\}$$
+ 
+### Multivariate Normal Distribution
+
+$$X \sim \mathcal{N}  (\mu,\Sigma)  = \frac{1}{(2\pi)^{(p/2)} |\Sigma_k|^{1/2}} \exp \left\{- \frac{1}{2} \left(x_i-\mu_k\right)^{T} \Sigma_k^{-1} \left(x_i-\mu_k \right)  \right\}$$
+
+
+
+
+
+#### Log Likelihood
+
+$$LogL_c =  \sum\limits_{i=1}^{n}\sum\limits_{i=1}^{k} I (Z_i = k)Log(\tau_kf_k(x_i,\theta_k))$$
+$$ E-\ Step$$
+
+####  Posterior Probability
+
+
+$$\pi_{ik}^b = \frac{\tau_k^{(b_i-1)} \phi(\mu_k^{b-1}, \sigma^2_k )} {\sum\limits_{i=1}^{k} \tau_k^{(b_i-1)} \phi(\mu_k^{b-1}, \sigma^2_k )}$$
+
+$$cov_{x,y} = \frac{\sum\limits_{i=1}^{n}{(x_i-\overline{x}) \cdot (y_i-\overline{y})} }{n-1}$$
+---
+The E- step returns the posterior Probability, which is the probability that the ith observation is coming fro the kth component
+
+* The dataframe x is converted to a matrix and the dimensions are noted. n = number of rows or observations, p = number of columns
+
+
+```{r}
+E.step <- function(x, tau, Mu, covariance){  #tau is mixture proportion, Mu is mean S2 is Covariance
+  
+ x <- as.matrix(x)
+ n <- dim(x)[1]
+ K <- length(tau)
+ p <- dim(x)[2]
+ Pi <- matrix(NA, n, K)
+
+ for (i in 1:n){
+   
+  for (k in 1:K){
+   Pi[i,k] <- tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])  #dnorm means normal distribution
+  
+   } 
+  Pi[i,] <- Pi[i,] / sum(Pi[i,])
+  # cat("E_STEP", Pi[i,])
+ }
+return(Pi)
+
+}
+```
+
+
+$$ M - Step$$
+<hr/>
+
+####  Weights
+
+$$\tau_k^{(b)} =\frac{1}{n}  \sum\limits_{i=1}^{n}\pi_{ik}^b$$
+
+#### Mean
+
+
+
+$$ \mu_k^{b-1} = \frac{ \sum\limits_{i=1}^{n}\pi_{ik}^b \cdot x_i}  { \sum\limits_{i=1}^{n}\pi_{ik}^{(b)}}  $$
+####  Covariance
+
+$$\sum\limits_{P*P} =
+ \begin{pmatrix}
+  a_{1,1} & a_{1,2} & \cdots & a_{1,p} \\
+  a_{1,2} & a_{2,2} & \cdots & a_{2,p} \\
+  \vdots  & \vdots  & \ddots & \vdots  \\
+  a_{1,p} & a_{2,p} & \cdots & a_{p,p}
+ \end{pmatrix}$$
+
+
+$$\Sigma_k^{(b)} = \frac{ \sum\limits_{i=1}^{n}\pi_{ik}^b \cdot (x_i - \mu_k^{b}) \cdot (x_i - \mu_k^{b})^T }  { \sum\limits_{i=1}^{n}\pi_{ik}^{(b)} } $$
+
+
+
+```{r}
+M.step <- function(x, Pi){
+ x <- as.matrix(x)
+ K <- dim(Pi)[2]
+ n <- dim(x)[1]
+ p <- dim(x)[2]
+ Mu = matrix(0, nrow = p, ncol = K)
+ covariance = array(0, dim = c(p,p,K))
+ 
+ Sum.Pi <- apply(Pi, 2, sum)
+ tau <- Sum.Pi / n
+
+
+ for (k in 1:K){
+ 
+  for (i in 1:n){
+   Mu[,k] <- Mu[,k] + Pi[i,k] %*% t(x[i,])
+  }
+  Mu[,k] <- Mu[,k] / Sum.Pi[k]
+  
+  for (i in 1:n){   
+   covariance[, , k] <- covariance[, , k] + (Pi[i,k] *  ( as.matrix(x[i,] - Mu[,k])) %*%  t(as.matrix(x[i,] - Mu[,k])))
+  }
+  covariance[, , k] <- covariance[, , k] / Sum.Pi[k]
+
+ }
+
+ return(list(tau = tau, Mu = Mu, covariance = covariance))
+
+}
+```
+
+
+
+
+
+$$ Complete-Logarithm\ Likelihood$$
+---
+
+```{r}
+logL <- function(x, tau, Mu, covariance){
+
+ x <- as.matrix(x)
+ n <- dim(x)[1]
+ K <- length(tau)
+
+ ll <- 0
+
+ for (i in 1:n){
+
+  ll2 <- 0
+
+  for (k in 1:K){
+   ll2 <- ll2 + tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])
+  }
+
+  ll <- ll + log(ll2)
+ }
+
+ return(ll)
+
+}
+```
+
+
+
+$$ Expectation-Maximization\ Algorithm$$
+```{r}
+EM <- function(x, tau, Mu, covariance, eps){
+
+ x <- as.matrix(x)
+# cat("I am here 0", "\n")
+ K <- length(tau)
+ n <- dim(x)[1]
+ p <- dim(x)[2]
+# cat("I am here 1", "\n")
+ b <- 0
+
+ # cat("Iteration",b , "tau =", tau, "\n")
+ # cat("Iteration",b , "Mu =", Mu, "\n")
+ # cat("Iteration",b , "Cov =", covariance, "\n")
+ ll.old <- -Inf
+ ll <- logL(x, tau, Mu, covariance)
+ # cat("Iteration",b , "logL =", ll, "\n")
+ # cat("I am here 2", "\n")
+ repeat{
+
+  b <- b + 1
+
+  if ((ll - ll.old) / abs(ll) < eps) break
+# cat("I am here 3", "\n")
+  ll.old <- ll
+  # cat("ll.old", ll.old)
+  Pi <- E.step(x, tau, Mu, covariance)
+  # cat("I am here 4", "\n")
+  # cat("Pi", Pi)
+  M <- M.step(x,Pi)
+  # cat("I am here 5", "\n")
+
+  tau <- M$tau
+  Mu <- M$Mu
+  covariance <- M$covariance
+
+  ll <- logL(x, tau, Mu, covariance) 
+  cat("Iteration", b, "logL =", ll, "\n")
+ }
+
+ id <- apply(Pi, 1, which.max)
+
+ M <- 3 * K - 1
+ BIC <- -2 * ll + M * log(n)
+ AIC <- -2 * ll + M * 2
+
+ return(list(tau = tau, Mu = Mu, covariance = covariance, logL = ll, BIC = BIC, Pi = Pi , id = id, AIC = AIC))
+
+}
+```
+
+
+$$ Parameters$$
+
+```{r}
+#Tau
+t_test = c(0.3,0.2,0.5)
+```
+
+
+```{r}
+# Mean
+m1 = c(3,1,4,7)
+m2 = c(1,1,6,2)
+m3 = c(3,5,7,6)
+
+mu_test = matrix(c(m1,m2,m3), nrow = 4, ncol = 3 )
+mu_test
+```
+
+
+```{r}
+# Covariance
+e1 = c(2,1,2,5)
+e2 = c(9,5,8,3)
+e3 = c(3,7,3,7)
+
+cov_e1 <- matrix(cov(as.matrix(e1)), nrow = 1, ncol = 4)
+cov_e1 = as.vector(cov_e1)
+cv_1 = diag(cov_e1, nrow =  4, ncol = 4)
+cv_1
+
+
+cov_e2 <- matrix(cov(as.matrix(e2)), nrow = 1, ncol = 4)
+cov_e2 = as.vector(cov_e2)
+cv_2 = diag(cov_e2, nrow =  4, ncol = 4)
+cv_2
+
+
+cov_e3 <- matrix(cov(as.matrix(e3)), nrow = 1, ncol = 4)
+cov_e3 = as.vector(cov_e3)
+cv_3 = diag(cov_e3, nrow =  4, ncol = 4)
+cv_3
+
+```
+
+
+```{r}
+cov_test = array(c(cv_1, cv_2, cv_3), dim = c(4,4,3))
+cov_test
+```
+
+```{r}
+EM
+```
+
+
+
+
+```{r}
+e_step = E.step(x,tau = t_test, Mu = mu_test, covariance = cov_test)
+head(e_step)
+```
+
+
+```{r}
+M.step(x,e_step)
+```
+
+```{r}
+w = logL(x,tau = t_test, Mu = mu_test, covariance = cov_test)
+w
+```
+
+```{r}
+t_test
+
+```
+
+
+```{r}
+ mu_test
+```
+
+```{r}
+class(mu_test)
+```
+
+```{r}
+dim(mu_test)
+```
+
+
+
+```{r}
+cov_test
+```
+
+```{r}
+A2 <- EM(x,tau = t_test, Mu = mu_test, covariance = cov_test, eps = 1e-4)
+
+```
+
+```{r}
+A2$logL
+A2$BIC
+```
+
+```{r}
+A2$Pi
+```
+```{r}
+A2$id
+```
+```{r}
+A2$Pi
+```
+
+
+```{r}
+A2$Mu
+```
+```{r}
+A2$covariance
+```
+
+
+
+#### Maths in R-Markdown
+https://rpruim.github.io/s341/S19/from-class/MathinRmd.html
+

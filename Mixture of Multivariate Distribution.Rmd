@@ -1,0 +1,1002 @@
+---
+title: "Mix of Multivariate Gaussian"
+author: "Kehinde Fagbamigbe"
+date: '2022-08-24'
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+#### The package for multivariate distribution is the dmvnorm which is in the mvtnorm package in R
+#### Installing the mvtnorm library
+```{r}
+library(mvtnorm)
+#library(mvtnorm::dmvnorm())
+```
+
+
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+x
+```
+
+$$ cov_{x,y} = \frac{\sum\limits_{i=1}^{n}{(x_i-\overline{x}) \cdot (y_i-\overline{y})} }{n-1} $$
+
+```{r}
+sigma = array(NA, dim = c(4,4,3))
+sigma
+```
+
+```{r}
+sigma[, , 1]
+```
+
+
+
+
+
+
+
+```{r}
+mu = matrix(NA, nrow = 4, ncol = 3)
+mu
+```
+
+```{r}
+head(x)
+```
+
+
+```{r}
+class(x)
+```
+
+
+```{r}
+x[1,]
+```
+```{r}
+y = t(x[1,])
+y
+```
+
+
+```{r}
+the_mean <- matrix(c(3,1,4,2), ncol=1, nrow = 4)
+the_mean
+```
+
+
+
+
+```{r}
+y - the_mean
+```
+
+```{r}
+t(x[2,])
+```
+
+ 
+ 
+```{r}
+x <- as.matrix(x)
+```
+ 
+
+```{r}
+covariance <- cov(x)
+covariance
+```
+
+
+```{r}
+covariance = t(as.matrix(covariance))
+covariance
+```
+
+
+
+
+```{r}
+cov_diag <- diag(diag(covariance))
+cov_diag
+```
+
+
+```{r}
+
+#  x <- as.matrix(x)
+#  n <- dim(x)[1]
+#  K = length(K)
+# 
+# 
+# for (i in 1:n) {
+#   
+#   for (k in 1:K){
+#     
+#     t(x[i,]) - mu[,k]
+#     
+#     
+#   }
+#   
+# }
+```
+
+
+
+```{r}
+m1 = c(3,1,4,7)
+m2 = c(1,1,6,2)
+m3 = c(3,5,7,6)
+
+# e1 = c(2,1,2,5)
+# e2 = c(9,5,8,3)
+# e3 = c(3,7,3,7)
+
+t_test = c(0.3,0.2,0.5)
+```
+
+
+```{r}
+mu_test = matrix(c(m1,m2,m3), nrow = 4, ncol = 3 )
+mu_test
+```
+
+
+
+```{r}
+cov_e1 <- cov(as.matrix(x))
+cov_e1
+cv = diag(cov_e1)
+cv = diag(cv)
+```
+```{r}
+e1 = cv
+e1
+```
+
+```{r}
+e2 = cv
+e2
+```
+
+```{r}
+e3 = cv
+e3
+```
+
+
+```{r}
+cov_test = array(c(e1, e2, e3), dim = c(4,4,3))
+cov_test
+```
+
+
+```{r}
+mu_test
+```
+
+```{r}
+t_test
+```
+
+
+
+$$ E-\ Step$$
+
+```{r}
+E.step <- function(x, tau, Mu, covariance){  #tau is mixture proportion, Mu is mean S2 is Covariance
+  
+ x <- as.matrix(x)
+ n <- dim(x)[1]
+ K <- length(tau)
+ p <- dim(x)[2]
+ # Mu = matrix(NA, nrow = p, ncol = K)
+ # covariance = array(NA, dim = c(p,p,K))
+ #cat("sigma", sigma, "\n")
+
+ Pi <- matrix(NA, n, K)
+
+ for (i in 1:n){
+  for (k in 1:K){
+   Pi[i,k] <- tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])  #dnorm means normal distribution
+    #cat("Pik", Pi[i,k], "\n")
+  } 
+  Pi[i,] <- Pi[i,] / sum(Pi[i,])
+ }
+
+ return(Pi)
+
+}
+```
+
+```{r}
+dim(x)
+```
+```{r}
+dim(mu_test)
+```
+
+```{r}
+dim(t_test)
+```
+
+```{r}
+R = E.step(x,tau = t_test, Mu = mu_test, covariance = cov_test )
+R
+class(R)
+```
+
+$$Parameter$$
+
+
+```{r}
+#Tau
+t_test = c(0.3,0.2,0.5)
+t_test
+```
+
+
+```{r}
+# Mean
+m1 = c(3,1,4,7)
+m2 = c(1,1,6,2)
+m3 = c(3,5,7,6)
+
+mu_test = matrix(c(m1,m2,m3), nrow = 4, ncol = 3 )
+mu_test
+
+MU_Demo <- matrix(0, nrow = 4, ncol = 3)
+MU_Demo
+```
+
+
+
+```{r}
+# Covariance
+e1 = c(2,1,2,5)
+e2 = c(9,5,8,3)
+e3 = c(3,7,3,7)
+
+cov_e1 <- matrix(cov(as.matrix(e1)), nrow = 1, ncol = 4)
+cov_e1 = as.vector(cov_e1)
+cv_1 = diag(cov_e1, nrow =  4, ncol = 4)
+cv_1
+
+
+cov_e2 <- matrix(cov(as.matrix(e2)), nrow = 1, ncol = 4)
+cov_e2 = as.vector(cov_e2)
+cv_2 = diag(cov_e2, nrow =  4, ncol = 4)
+cv_2
+
+
+cov_e3 <- matrix(cov(as.matrix(e3)), nrow = 1, ncol = 4)
+cov_e3 = as.vector(cov_e3)
+cv_3 = diag(cov_e3, nrow =  4, ncol = 4)
+cv_3
+
+
+
+cov_test = array(c(cv_1, cv_2, cv_3), dim = c(4,4,3))
+cov_test
+```
+
+```{r}
+cov_test[,,2]
+```
+
+
+```{r}
+cov_test = array(c(cv_1, cv_2, cv_3), dim = c(4,4,3))
+cov_test
+```
+
+$$ M - Step$$
+
+```{r}
+M.step <- function(x, Pi){
+
+ x <- as.matrix(x)
+ n <- dim(x)[1]
+ K <- length(tau)
+ p <- dim(x)[2]
+ Mu <- matrix(0, nrow = p, ncol = K)
+ covariance <- array(0, dim = c(p,p,K))
+ 
+ Sum.Pi <- apply(Pi, 2, sum)
+ tau <- Sum.Pi / n
+
+
+ for (k in 1:K){
+ 
+  # for (i in 1:n){
+  #  Mu[,k] <- Mu[,k] + as.vector(Pi[i,k]) %*% (x[i,])
+  #  
+  # }
+  # Mu[,k] <- Mu[,k] / Sum.Pi[k]
+  # cat("Mu", Mu[,k], "\n")
+  for (i in 1:n){   
+  
+  covariance[, , k] <- covariance[, , k] + (as.vector(Pi[i,k]) %*% (t(x[i,]) - Mu[,k]) %*% t((t(x[i,]) - Mu[,k])))
+  cat("Co", covariance[, , k], "\n")
+  
+  
+  covariance[, , k] <- covariance[, , k] + ((t(x[i,]) - Mu[,k]) %*% t((t(x[i,]) - Mu[,k])))
+  cat("Co", covariance[, , k], "\n")
+  
+  }
+  covariance[, , k] <- covariance[, , k] / Sum.Pi[k]
+
+  
+  # for (i in 1:n){   
+  # S2[k] <- S2[k] + Pi[i,k] * (x[i] - Mu[k])^2
+  # }
+  # S2[k] <- S2[k] / Sum.Pi[k]
+  
+
+ }
+
+ return(list(tau = tau, Mu = Mu, covariance = covariance))
+
+}
+```
+
+
+
+```{r}
+M.step(x, R)
+```
+
+
+$$ Log\ Likelihood $$
+```{r}
+logL <- function(x, tau, Mu, covariance){
+
+ x <- as.matrix(x)
+ n <- dim(x)[1]
+ K <- length(tau)
+
+ ll <- 0
+
+ for (i in 1:n){
+
+  ll2 <- 0
+
+  for (k in 1:K){
+   ll2 <- ll2 + tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])
+  }
+
+  ll <- ll + log(ll2)
+
+ }
+
+ return(ll)
+
+}
+```
+
+
+
+```{r}
+U = logL(x,tau = t_test, Mu = mu_test, covariance = cov_test)
+U
+```
+
+$$ Expectation-Maximization\ Algorithm$$
+```{r}
+logL <- function(x, tau, Mu, covariance){
+
+ x <- as.matrix(x)
+ n <- dim(x)[1]
+ K <- length(tau)
+
+ ll <- 0
+
+ for (i in 1:n){
+
+  ll2 <- 0
+
+  for (k in 1:K){
+   ll2 <- ll2 + tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])
+  }
+
+  ll <- ll + log(ll2)
+
+ }
+
+ return(ll)
+
+}
+```
+
+
+
+
+```{r}
+logL <- function(x, tau, Mu, covariance){
+
+ x <- as.matrix(x)
+ n <- dim(x)[1]
+ K <- length(tau)
+
+ ll <- 0
+
+ for (i in 1:n){
+
+  ll2 <- 0
+
+  for (k in 1:K){
+   ll2 <- ll2 + tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])
+  }
+
+  ll <- ll + log(ll2)
+ }
+
+ return(ll)
+
+}
+
+EM <- function(x, tau, Mu, covariance, eps){
+
+ x <- as.matrix(x)
+ K <- dim(Pi)[2]
+ n <- dim(Pi)[1]
+
+ b <- 0
+
+ ll.old <- -Inf
+ ll <- logL(x, tau, Mu, covariance)
+
+ # cat("Iteration", b, "logL =", ll, "\n")
+ 
+ repeat{
+
+  b <- b + 1
+
+  if ((ll - ll.old) / abs(ll) < eps) break
+
+  ll.old <- ll
+
+  Pi <- E.step(x, tau, Mu, covariance)
+
+  M <- M.step(x, Pi)
+  tau <- M$tau
+  Mu <- M$Mu
+  covariance <- M$covariance
+
+  ll <- logL(x, tau, Mu, covariance)
+
+  # cat("Iteration", b, "logL =", ll, "\n")
+
+ }
+
+ id <- apply(Pi, 1, which.max)
+
+ M <- 3 * K - 1
+ BIC <- -2 * ll + M * log(n)
+ AIC <- -2 * ll + M * 2
+
+ return(list(tau = tau, Mu = Mu, covariance = covariance, Pi = Pi, id = id,
+  logL = ll, BIC = BIC, AIC = AIC))
+
+}
+```
+
+
+
+```{r}
+w = logL(x,tau = t_test, Mu = mu_test, covariance = cov_test)
+w
+```
+
+
+
+```{r}
+# Expectation-Maximization Algorithm (Mixture of Univariate Gaussian)
+# E-Step
+# x <- as.matrix(x)
+# sigma <- cov(x)
+# sigma
+```
+
+
+```{r}
+# dim(sigma)
+```
+
+
+```{r}
+# r <- diag(sigma)
+# r
+```
+
+
+```{r}
+# dim(r)
+```
+
+
+```{r}
+# r <- as.matrix(r)
+# r
+```
+
+
+```{r}
+# r <- diag(sigma)
+# r <- as.matrix(r)
+# r <- t(r)
+# r
+
+```
+
+
+
+```{r}
+# dim(r)
+```
+
+
+
+```{r}
+# mu <- apply(x, 2, mean)
+# mu <- as.matrix(mu)
+# mu
+```
+
+
+
+```{r}
+# x_transpose <- t(x)
+# dim(x_transpose)
+```
+
+
+```{r}
+covariance <- cov(x)
+covariance
+cov_diag <- diag(covariance)
+cov_diag
+```
+
+```{r}
+b <- diag(cov_diag)
+b
+```
+
+
+```{r}
+sigma <- as.matrix(cov_diag)
+sigma <- t(sigma)
+sigma
+ncol(sigma)
+```
+
+
+
+```{r}
+d <- diag(ncol(sigma))
+```
+
+
+# Covariance Input is 1 * p
+I have to turn it to a p*p
+
+Mean input is 1 * p
+and it stays that way
+
+
+covariance = (0.03076331, 0.15737247, 0.05717391, 0.09219860 )
+Mean = (0.03076331 0.15737247 0.05717391 0.09219860 )
+
+
+
+```{r}
+mat <- as.matrix(x)
+quantfun <- function(x) as.integer(cut(x, quantile(x, probs=0:4/4), include.lowest=TRUE))
+g <- apply(mat, 1, quantfun)
+g
+```
+
+
+
+
+```{r}
+
+E.step <- function(x, tau, Mu, covariance){  #tau is mixture proportion, Mu is mean S2 is Covariance
+  
+ x <- as.matrix(x)
+ n <- dim(x)[1]
+ K <- length(tau)
+ x_transpose <- t(x)
+ p <- dim(x_transpose)[1]
+ Mu0 <- t(Mu)
+ cat("sigma", sigma, "\n")
+
+ Pi <- matrix(NA, n, K)
+
+ for (i in 1:n){
+  for (k in 1:K){
+   Pi[i,k] <- tau[k] * dmvnorm(x_transpose[,i], mean = Mu0[,1], sigma = sigma[1,], log = FALSE, checkSymmetry = TRUE)  #dnorm means normal distribution
+   # cat("Pik", Pi[i,k], "\n")
+  } 
+  Pi[i,] <- Pi[i,] / sum(Pi[i,])
+ }
+
+ return(Pi)
+
+}
+```
+
+
+```{r}
+library(mvtnorm)
+```
+
+
+```{r}
+
+
+
+for (i in 1:p) {
+  for (j in 1:n) {
+    for (k in 1:K) {
+      
+      Pi[i, k] <- tau[k] * mvtnorm::dmvnorm( x_transpose[i,j], mean = Mu0[i,1],    )
+      
+    }
+    
+  }
+  
+}
+```
+
+
+```{r}
+tau <- c(0.2, 0.5, 0.1, 0.2)
+Mu <- c(-2, 2, 5, 1)
+covariance <- c(1, 0.5, 2, 0.2)
+e_step <- E.step(x, Mu, tau, covariance)
+```
+
+
+
+<!-- ```{r} -->
+
+<!-- E.step <- function(x, Mu, tau, covariance){  #tau is mixture proportion, Mu is mean S2 is Covariance -->
+
+<!--  K <- length(tau) -->
+<!--  sigma <- diag(covariance) -->
+<!--  x <- as.matrix(x) -->
+<!--  x_transpose <- t(x) -->
+<!--  Mu0 <- t(Mu) -->
+<!--  n <- dim(x)[1] -->
+<!--  # mu <- apply(x, 2, mean) -->
+<!--  # mu <- as.matrix(mu) -->
+<!--  # covariance <- cov(x) -->
+<!--  # cov_diag <- diag(covariance) -->
+<!--  # sigma <- as.matrix(cov_diag) -->
+<!--  # sigma <- t(sigma) -->
+<!--  cat("sigma", sigma, "\n") -->
+
+<!--  Pi <- matrix(NA, n, K) -->
+
+<!--  for (i in 1:n){ -->
+<!--   for (k in 1:K){ -->
+<!--    Pi[i,k] <- tau[k] * dmvnorm(x_transpose[,i], mean = Mu0[,1], sigma = sigma[1,], log = FALSE, checkSymmetry = TRUE)  #dnorm means normal distribution -->
+<!--    # cat("Pik", Pi[i,k], "\n") -->
+<!--   }  -->
+<!--   Pi[i,] <- Pi[i,] / sum(Pi[i,]) -->
+<!--  } -->
+
+<!--  return(Pi) -->
+
+<!-- } -->
+<!-- ``` -->
+
+
+
+
+
+```{r}
+tau <- c(0.2, 0.5, 0.3)
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+```{r}
+E.step(x,tau)
+```
+
+
+# M-Step
+```{r}
+M.step <- function(x, Pi){
+
+ K <- dim(Pi)[2]
+ n <- dim(Pi)[1]
+ 
+ Sum.Pi <- apply(Pi, 2, sum)
+
+ tau <- Sum.Pi / n
+
+ Mu <- rep(0, K)
+ Sigma <- rep(0, K)
+
+ for (k in 1:K){
+ 
+  for (i in 1:n){
+   Mu[k] <- Mu[,k] + Pi[i,k] %*% x[i]
+  }
+  Mu[k] <- Mu[k] / Sum.Pi[k]
+
+  for (i in 1:n){   
+  
+   Sigma[k] <- Sigma[k] + Pi[i,k] %*% (x[,i] - Mu[,k]) %*% t((x[,i] - Mu[k]))
+  }
+  Sigma[k] <- Sigma[k] / Sum.Pi[k]
+
+ }
+
+ return(list(tau = tau, Mu = Mu, S2 = Sigma))
+
+}
+```
+
+
+
+```{r}
+logL <- function(x, tau, Mu, S2){
+ 
+ x <- as.matrix(x)
+ n <- dim(x)[1]
+ K <- length(tau)
+
+ ll <- 0
+
+ for (i in 1:n){
+
+  ll2 <- 0
+
+  for (k in 1:K){
+   ll2 <- ll2 + tau[k] * dnorm(x[i], Mu[k], sqrt(S2[k])) 
+  }
+
+  ll <- ll + log(ll2)
+
+ }
+
+ return(ll)
+
+}
+
+
+EM <- function(x, tau, Mu, S2, eps){
+
+ n <- length(x)
+ K <- length(tau)
+
+ b <- 0
+
+ ll.old <- -Inf
+ ll <- logL(x, tau, Mu, S2)
+
+ # cat("Iteration", b, "logL =", ll, "\n")
+ 
+ repeat{
+
+  b <- b + 1
+
+  if ((ll - ll.old) / abs(ll) < eps) break
+
+  ll.old <- ll
+
+  Pi <- E.step(x, tau, Mu, S2)
+
+  M <- M.step(x, Pi)
+  tau <- M$tau
+  Mu <- M$Mu
+  S2 <- M$S2
+
+  ll <- logL(x, tau, Mu, S2)
+
+  # cat("Iteration", b, "logL =", ll, "\n")
+
+ }
+
+ id <- apply(Pi, 1, which.max)
+
+ M <- 3 * K - 1
+ BIC <- -2 * ll + M * log(n)
+ AIC <- -2 * ll + M * 2
+
+ return(list(tau = tau, Mu = Mu, S2 = S2, Pi = Pi, id = id,
+  logL = ll, BIC = BIC, AIC = AIC))
+
+}
+```
+
+
+
+```{r}
+tau <- c(0.2, 0.5, 0.3)
+Mu <- c(-2, 2, 5)
+S2 <- c(1, 0.5, 2)
+
+K <- length(tau)
+n <- 1000
+
+nk <- rmultinom(1, n, tau)
+
+x <- NULL
+for (k in 1:K){
+ x <- c(x, rnorm(nk[k], Mu[k], sqrt(S2[k])))
+}
+
+hist(x, freq = FALSE)
+
+tau.0 <- rep(1/3, 3)
+Mu.0 <- c(-1, 0, 1)
+S2.0 <- c(1, 1, 1)
+
+A <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+
+t <- seq(-5, 10, by = 0.01)
+
+d <- rep(0, length(t))
+for (k in 1:K){
+ d <- d + A$tau[k] * dnorm(t, A$Mu[k], sqrt(A$S2[k]))
+}
+
+points(t, d, type = "l")
+
+
+# K = 2
+
+tau.0 <- rep(1/2, 2)
+Mu.0 <- c(-2, 1)
+S2.0 <- c(1, 1)
+
+A2 <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+A2$logL
+A2$BIC
+
+# K = 3
+
+tau.0 <- rep(1/3, 3)
+Mu.0 <- c(-1, 0, 1)
+S2.0 <- c(1, 1, 1)
+
+A3 <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+A3$logL
+A3$BIC
+
+# K = 4
+
+tau.0 <- rep(1/4, 4)
+Mu.0 <- c(-2, -1, 0, 1)
+S2.0 <- c(1, 1, 1, 1)
+
+A4 <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+A4$logL
+A4$BIC
+
+
+# K = 5
+
+tau.0 <- rep(1/5, 5)
+Mu.0 <- c(-2, -1, 0, 1, 2)
+S2.0 <- c(1, 1, 1, 1, 1)
+
+A5 <- EM(x, tau = tau.0, Mu = Mu.0, S2 = S2.0, eps = 1e-8)
+A5$logL
+A5$BIC
+
+
+
+
+
+```
+
+
+
+```{r}
+# X <- t(as.matrix(expand.grid(0:3, 0:3)))
+# X
+```
+
+
+```{r}
+X <- X[, colSums(X) <= 3]
+X
+```
+
+
+```{r}
+X <- rbind(X, 3:3 - colSums(X));
+X
+```
+
+```{r}
+the_mean <- matrix(c(3,1,4,2,6,5,5,2,3,4,6,6,8,3,4,5), ncol=4, nrow = 4)
+the_mean
+```
+
+```{r}
+c = the_mean - 3
+c
+```
+
+
+```{r}
+test <- matrix(c(4,2,2,5,8,9,2,4,3,5,8,9), ncol=4, nrow = 1)
+test
+class(test)
+
+th = t(test)
+th
+```
+
+```{r}
+b <- test - the_mean
+b
+```
+
+
+```{r}
+library(ggplot2)
+```
+
+
+```{r}
+?mpg
+```
+
+
+$$ cov_{x,y} = \frac{\sum\limits_{i=1}^{n}{(x_i-\overline{x}) \cdot (y_i-\overline{y})} }{n-1} $$
+$$\sum = 
+ \begin{pmatrix}
+  a_{1,1} & a_{1,2} & \cdots & a_{1,n} \\
+  a_{2,1} & a_{2,2} & \cdots & a_{2,n} \\
+  \vdots  & \vdots  & \ddots & \vdots  \\
+  a_{1,1} & a_{m,2} & \cdots & a_{m,n}
+ \end{pmatrix}$$
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  $$w=Hz \sim N(0, HH')$$
+  $$a \pm b$$
+  
+  
+  
+  
+
+$$x \ge 15$$
+
+$$a_i \ge 0~~~\forall i$$
+
+$$\sigma = \sqrt{\frac{\sum\limits_{i=1}^{n} \left(x_{i} - \bar{x}\right)^{2}} {n-1}}$$
+$$\hat{\lambda}=1.02$$
+
+
+
+
+$$\sqrt{4}=2$$
+
+
+
+ 
+ 

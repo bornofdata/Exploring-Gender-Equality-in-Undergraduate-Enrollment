@@ -1,0 +1,372 @@
+---
+title: "Array Dimensions"
+author: "Kehinde Fagbamigbe"
+date: "2023-01-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+```
+
+
+- Y[i,2,j,k,t]
+- #i, no of records
+- #j/p Majors
+- #k/q: Race
+- #t/T Year
+
+
+
+- Y[i,2,j,k,t]
+- #i, no of records
+- #j/p Majors
+- #k/q: Race
+- #t/T Year
+
+998   2   4   5  13
+
+
+### Demo
+```{r}
+dim_names <- list(c("Inst1", "Inst2", "Inst3"), c("M","F"), c("Maths", "Phy", "Bio"), c("Black", "Hispanic", "White", "Latino"), c("yr1","yr2","yr3","yr4","yr5"))
+my_5d_array <- array(1:450, c(3, 2, 3, 4, 5), dimnames = dim_names)
+my_5d_array
+```
+- Y[i,2,j,k,t]
+- #i, no of records
+- #j/p Majors
+- #k/q: Race
+- #t/T Year
+
+998   2   4   5  13
+
+## this is the data for year 2!!!
+
+```{r}
+year2 <- my_5d_array[ , , , , 2]
+dim(year2)
+year2
+```
+
+### this is the data for just the female gender!
+dim_names <- list(c("Inst1", "Inst2", "Inst3"), c("M","F"), c("Maths", "Phy", "Bio"), c("Black", "Hispanic", "White", "Latino"), c("yr1","yr2","yr3","yr4","yr5"))
+
+```{r}
+females <- my_5d_array[, 2, , , ]
+dim(females)
+females
+```
+```{r}
+percent_missing <- function(array) {
+  total_elements <- prod(dim(array))
+  missing_elements <- sum(is.na(array))
+  return(missing_elements/total_elements * 100)
+}
+
+```
+
+
+```{r}
+percent_missing(my_5d_array)
+```
+
+```{r}
+dim(females)
+```
+- Y[i,2,j,k,t]
+- #i, no of records
+- #j/p Majors
+- #k/q: Race
+- #t/T Year
+
+998   2   4   5  13
+
+
+```{r}
+female_per_year <- apply(females, 4, sum) #sums across the individual years
+female_per_year
+```
+```{r}
+dim(female_per_year)
+```
+
+```{r}
+class(female_per_year)
+```
+
+```{r}
+colnames(female_per_year)
+```
+
+```{r}
+female_sum_apply <- apply(females, 3, sum)
+female_sum_apply
+```
+
+
+
+```{r}
+female_race_per_year <- apply(females, 3:4, sum) #no of race per year for females
+female_race_per_year
+```
+
+```{r}
+female_per_institution_per_year <- apply(females, c(1,4), sum) #no of females in institution per year 
+female_per_institution_per_year
+```
+
+```{r}
+dim(female_per_institution_per_year)
+```
+
+
+```{r}
+class(female_per_institution_per_year)
+```
+
+
+```{r}
+#image(female_per_institution_per_year)
+```
+
+
+```{r}
+#matplot(female_per_institution_per_year)
+```
+
+```{r}
+female_per_institution_per_year
+```
+
+```{r}
+ncol(female_per_institution_per_year)
+```
+
+```{r}
+vector <- as.vector(female_per_institution_per_year)
+vector
+```
+
+```{r}
+# Convert the 2D array into a data frame
+# df <- data.frame(x = 1:nrow(female_sum_apply), y = 1:ncol(female_sum_apply), z = as.vector(female_sum_apply))
+# df
+```
+
+
+### Converting matrix or array to a dataframe
+```{r}
+df <- as.data.frame(female_per_institution_per_year)
+df
+```
+
+### Obtaining the row names
+```{r}
+rownames(df)
+```
+
+
+```{r}
+colnames(df)
+```
+
+
+### Add the index as a column
+```{r}
+df_long <- df %>%
+  mutate(Inst = row.names(df))
+df_long
+#rownames(df_long) <- NULL
+df_long
+```
+
+# Convert the data frame to a long format for plotting
+```{r}
+df_long <- reshape2::melt(df_long, id.vars = "Inst")
+df_long
+```
+
+
+
+```{r}
+# Plot the grouped bar chart
+ggplot(df_long, aes(x = Inst, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  #geom_text(aes(label = value)) +
+  xlab("Institution") +
+  ylab("No of Females") +
+  ggtitle("Comparison of Females in Institutions by Year") +
+  theme(legend.title = element_blank())
+
+```
+
+### Add the index as a column
+```{r}
+df_long <- df %>%
+  mutate(Inst = row.names(df))
+df_long
+rownames(df_long) <- NULL
+df_long
+```
+```{r}
+df_long <- reshape2::melt(df_long, id.vars = "Inst")
+df_long
+```
+
+```{r}
+# Plot the grouped bar chart
+ggplot(df_long, aes(x = Inst, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  #geom_text(aes(label = value)) +
+  xlab("Institution") +
+  ylab("No of Females") +
+  ggtitle("Comparison of Females in Institutions by Year") +
+  theme(legend.title = element_blank())
+
+```
+
+
+```{r}
+# Plot the grouped bar chart
+ggplot(df_long, aes(x = Inst, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "fill") +
+  xlab("Institution") +
+  ylab("No of Females") +
+  ggtitle("Comparison of Females in Institutions by Year") +
+  theme(legend.title = element_blank())
+```
+
+```{r}
+race <- apply(females, 3, sum)
+race
+```
+
+```{r}
+class(race)
+```
+
+
+### Converting to a dataframe
+```{r}
+race_df <- as.data.frame(race)
+race_df
+```
+
+
+```{r}
+race_df <- race_df %>%
+  mutate(Races = row.names(race_df))
+race_df
+rownames(race_df) <- NULL
+race_df
+```
+
+
+
+```{r}
+# Plot the bar chart
+ggplot(race_df, aes(x = Races, y = race)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  xlab("Race") +
+  ylab("No of Females") +
+  ggtitle("Race Comparison for Females") +
+  theme(legend.title = element_blank())
+
+```
+
+def find_missing_values(array):
+    missing_values = []
+    for i in range(array.shape[0]):
+        for j in range(array.shape[1]):
+            for k in range(array.shape[2]):
+                for l in range(array.shape[3]):
+                    for m in range(array.shape[4]):
+                        if np.isnan(array[i][j][k][l][m]):
+                            missing_values.append((i, j, k, l, m))
+    return missing_values
+    
+    
+    
+
+```{r}
+dim(my_5d_array)
+```
+
+
+```{r}
+find_missing_values <- function(my_5d_array) {
+  dims <- dim(my_5d_array)
+  missing_values <- which(is.na(my_5d_array), arr.ind=TRUE)
+  return(missing_values)
+}
+
+```
+
+
+```{r}
+find_missing_values(my_5d_array)
+```
+
+```{r}
+dim_names <- list(c("Inst1", "Inst2", "Inst3"), c("M","F"), c("1", "2", "3"), c("yr1","yr2"))
+my_5d_array <- array(1:27, c(3, 2, 3, 2), dimnames = dim_names)
+my_5d_array
+```
+
+```{r}
+dim_names <- list(c("a", "b", "c"), c("x", "y", "z"), c("1", "2", "3"))
+my_3d_array <- array(1:27, c(3, 3, 3), dimnames = dim_names)
+my_3d_array
+```
+
+
+
+
+```{r}
+my_3d_array[, , ]
+```
+
+```{r}
+my_3d_array[, , 1:2]
+```
+
+
+```{r}
+my_3d_array[, ,1]
+```
+
+
+```{r}
+my_3d_array[, 1,1]
+```
+
+
+```{r}
+my_3d_array[, ,1][,1:2]
+```
+
+```{r}
+my_3d_array[, ,1][,c("x", "z")]
+```
+
+
+```{r}
+dim_names <- list(c("a", "b"), c("w","x", "y", "z"), c("1", "2", "3"))
+my_array <- array(1:27, c(2, 4, 3), dimnames = dim_names)
+my_array
+```
+
+
+```{r}
+dim_names <- list(c("a", "b"), c("w","x", "y", "z"), c("1", "2", "3"), c("p","q"))
+my_5d_array <- array(1:27, c(2, 4, 3, 2), dimnames = dim_names)
+my_5d_array
+```

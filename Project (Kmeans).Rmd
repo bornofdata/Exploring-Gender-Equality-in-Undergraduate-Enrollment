@@ -1,0 +1,224 @@
+---
+title: "Project (Kmeans)"
+author: "Kehinde Fagbamigbe"
+date: "2022-10-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+RNGkind (sample.kind = "Rounding") 
+```
+
+
+```{r}
+x <- read.table("/Users/alhajidot/Documents/BGSU/Project/gaussian.txt", quote="\"", comment.char="")
+head(x)
+```
+
+
+```{r}
+E.step <- function(x, tau, Mu, covariance){  #tau is mixture proportion, Mu is mean S2 is Covariance
+  
+  x <- as.matrix(x)
+  n <- dim(x)[1]
+  K <- length(tau)
+  p <- dim(x)[2]
+  Pi <- matrix(NA, n, K)
+  
+  for (i in 1:n){
+    
+    for (k in 1:K){
+      Pi[i,k] <- tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])  #dnorm means normal distribution
+      
+    } 
+    Pi[i,] <- Pi[i,] / sum(Pi[i,])
+  }
+  return(Pi)
+  
+}
+
+
+# Mstep
+M.step <- function(x, Pi){
+  x <- as.matrix(x)
+  K <- dim(Pi)[2]
+  n <- dim(x)[1]
+  p <- dim(x)[2]
+  Mu = matrix(0, nrow = p, ncol = K)
+  covariance = array(0, dim = c(p,p,K))
+  
+  Sum.Pi <- apply(Pi, 2, sum)
+  tau <- Sum.Pi / n
+  
+  
+  for (k in 1:K){
+    
+    for (i in 1:n){
+      Mu[,k] <- Mu[,k] + Pi[i,k] %*% t(x[i,])
+    }
+    Mu[,k] <- Mu[,k] / Sum.Pi[k]
+    
+    for (i in 1:n){   
+      covariance[, , k] <- covariance[, , k] + (Pi[i,k] *  ( as.matrix(x[i,] - Mu[,k])) %*%  t(as.matrix(x[i,] - Mu[,k])))
+    }
+    covariance[, , k] <- covariance[, , k] / Sum.Pi[k]
+    
+  }
+  
+  return(list(tau = tau, Mu = Mu, covariance = covariance))
+  
+}
+
+
+# Log Likelihood
+logL <- function(x, tau, Mu, covariance){
+  
+  x <- as.matrix(x)
+  n <- dim(x)[1]
+  K <- length(tau)
+  
+  ll <- 0
+  
+  for (i in 1:n){
+    
+    ll2 <- 0
+    
+    for (k in 1:K){
+      ll2 <- ll2 + tau[k] * mvtnorm::dmvnorm(t(x[i,]), mean = (Mu[,k]), sigma = covariance[, , k])
+    }
+    
+    ll <- ll + log(ll2)
+  }
+  
+  return(ll)
+  
+}
+
+
+# EM Algorithm
+EM <- function(x, tau, Mu, covariance, eps){
+  
+  x <- as.matrix(x)
+  K <- length(tau)
+  n <- dim(x)[1]
+  p <- dim(x)[2]
+  b <- 0
+  ll.old <- -Inf
+  ll <- logL(x, tau, Mu, covariance)
+  repeat{
+    
+    b <- b + 1
+    
+    if ((ll - ll.old) / abs(ll) < eps) break
+    ll.old <- ll
+    Pi <- E.step(x, tau, Mu, covariance)
+    M <- M.step(x,Pi)
+    
+    tau <- M$tau
+    Mu <- M$Mu
+    covariance <- M$covariance
+    
+    ll <- logL(x, tau, Mu, covariance) 
+    #cat("Iteration", b, "logL =", ll, "\n")
+  }
+  
+  id <- apply(Pi, 1, which.max)
+  
+  M <- 3 * K - 1
+  BIC <- -2 * ll + M * log(n)
+  AIC <- -2 * ll + M * 2
+  
+  return(list(tau = tau, Mu = Mu, covariance = covariance, logL = ll, BIC = BIC, Pi = Pi , id = id, AIC = AIC))
+  
+}
+```
+
+
+
+```{r}
+p = dim(x)[2]
+p
+```
+
+
+
+
+```{r}
+cluster_centres = list()
+covariance = list()
+tau = list()
+bic_values = list()
+iteration = list()
+for (k in 1:11){
+    km <- kmeans(x, k, iter.max = 1)
+    #storing the values
+    cluster_centres[[k]] <- (km$centers)
+    covariance[[k]] <- (array(c(diag(p)), dim = c(p,p,k)))
+    tau[[k]] = rep(1/k, k)
+    
+    #passing the values to the EM function
+    g = t(km$centers)
+    cov_test <- (array(c(diag(p)), dim = c(p,p,k)))
+    t_test = rep(1/k, k)
+    iteration[[k]] = k
+    emEM = EM(x, tau = t_test,  Mu = g, covariance = cov_test, eps = 1e-4)
+    bic_values[[k]] = emEM$BIC
+}
+```
+
+```{r}
+cluster_centres
+```
+
+
+```{r}
+bic_values
+```
+
+## Unlist the list to select the values
+```{r}
+bic = paste(unlist(bic_values))
+bic
+```
+
+## Obtaining the minimum value
+```{r}
+minimum_bic_index = which.min(bic)
+minimum_bic_index
+```
+
+## Generated cluster centre
+```{r}
+cluster_centres
+```
+
+## Centroid corresponding to minimum bic value
+
+```{r}
+cluster_centres[[minimum_bic_index]]
+```
+
+```{r}
+k = paste(unlist(iteration))
+k
+
+```
+
+```{r}
+length(k)
+```
+
+```{r}
+length(bic)
+```
+
+
+```{r}
+plot(k, bic)
+```
+
